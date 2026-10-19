@@ -1,0 +1,988 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>WHALES</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a felt table — four company columns over a shared market strip,
+   the player's hand docked at the bottom, a ledger rail on the right. */
+:root{
+  --table:#15414E; --table-2:#0F3340; --table-3:#0B2733; --rail:#103744;
+  --on-table:#E9F1F0; --on-table-soft:#9FBDC3; --line:rgba(255,255,255,.1);
+  --paper:#FAFAF7; --paper-2:#EFEFEA; --ink:#15181C; --ink-soft:#616A72;
+  --brass:#D8B14A; --brass-soft:rgba(216,177,74,.2);
+  --sheet:#F7F7F3; --sheet-ink:#15181C; --sheet-rule:#D8D9D2; --sheet-soft:#5E666D;
+  --scrim:rgba(5,22,28,.66);
+  --cw:50px; --ch:77px;
+  --coA:#4A9A63; --coB:#5C79C4; --coC:#E5812C; --coD:#E8C32E;
+  --t0:#15181C; --t1:#6B737B; --t2:#C3C9CF; --t3:#FFFFFF;
+  --disp:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --table:#0C2C36; --table-2:#082129; --table-3:#061A21; --rail:#0A2630;
+    --line:rgba(255,255,255,.08); --paper:#F2F2EE; --paper-2:#E3E3DD;
+    --sheet:#0F2A33; --sheet-ink:#E9F1F0; --sheet-rule:#214450; --sheet-soft:#9FBDC3;
+    --scrim:rgba(0,10,14,.74); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --table:#0C2C36; --table-2:#082129; --table-3:#061A21; --rail:#0A2630;
+  --line:rgba(255,255,255,.08); --paper:#F2F2EE; --paper-2:#E3E3DD;
+  --sheet:#0F2A33; --sheet-ink:#E9F1F0; --sheet-rule:#214450; --sheet-soft:#9FBDC3;
+  --scrim:rgba(0,10,14,.74); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--table); color:var(--on-table);
+  font-family:var(--body); font-size:14px; line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='260' viewBox='0 0 520 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.04' stroke-width='1.3'%3E%3Cpath d='M0 44 C87 12 173 76 260 44 S433 12 520 44'/%3E%3Cpath d='M0 109 C87 77 173 141 260 109 S433 77 520 109'/%3E%3Cpath d='M0 174 C87 142 173 206 260 174 S433 142 520 174'/%3E%3Cpath d='M0 239 C87 207 173 271 260 239 S433 207 520 239'/%3E%3C/g%3E%3C/svg%3E");
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--brass);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+.wrap{max-width:1300px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:12px 26px}
+
+/* ---- top bar ---- */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:4px 12px}
+.mark{font-family:var(--disp);font-weight:800;font-size:25px;letter-spacing:.17em;
+  line-height:1;margin-right:.17em}
+.mark em{font-style:normal;color:var(--brass)}
+.phase{font-size:13px;color:var(--on-table-soft)}
+.phase b{color:var(--on-table);font-weight:600}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:transparent;border-radius:999px;
+  padding:7px 15px;font-size:13.5px;font-weight:500;cursor:pointer}
+.btn:hover{background:rgba(255,255,255,.07)}
+.btn.key{background:var(--brass);border-color:var(--brass);color:#1C1703;font-weight:700}
+.btn.key:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.38;cursor:default}
+.btn.key:disabled:hover{filter:none}
+
+/* match standings */
+.stand{display:flex;gap:6px;flex-wrap:wrap;align-items:center;width:100%;
+  padding-bottom:10px}
+.stand .goal{font-size:11.5px;font-weight:700;letter-spacing:.1em;
+  color:var(--on-table-soft);text-transform:uppercase}
+.pip{display:inline-flex;align-items:baseline;gap:5px;background:var(--table-2);
+  border-radius:999px;padding:4px 11px;font-size:12.5px}
+.pip b{font-family:var(--disp);font-size:16px;font-weight:700;
+  font-variant-numeric:tabular-nums}
+.pip.me{box-shadow:inset 0 0 0 1px var(--brass)}
+.pip.top{background:var(--brass-soft)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 232px;gap:16px;align-items:start}
+
+/* ---- company panels ---- */
+.cos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.co{background:var(--table-2);border-radius:11px;padding:10px 9px 11px;
+  border-top:4px solid var(--c);display:flex;flex-direction:column;gap:8px;
+  min-width:0;transition:box-shadow .14s}
+.co.pick{cursor:pointer;box-shadow:0 0 0 2px var(--brass),0 0 16px var(--brass-soft)}
+.co.pick:hover{background:var(--table)}
+.co.dim{opacity:.74}
+.c.slot{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.13)}
+.co-h{display:flex;align-items:center;gap:7px;min-width:0}
+.co-L{font-family:var(--disp);font-weight:800;font-size:19px;line-height:1;
+  color:var(--c)}
+.co-n{font-family:var(--disp);font-weight:700;font-size:12.5px;letter-spacing:.06em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-v{font-size:12px;color:var(--on-table-soft);min-height:32px}
+.co-v b{color:var(--on-table);font-weight:600;font-size:13px}
+.co-v .pl{font-family:var(--disp);font-weight:800;font-size:22px;color:var(--on-table);
+  line-height:1;margin-right:5px}
+.co-v .pr{color:var(--brass);font-weight:700}
+.row{display:flex;gap:5px;flex-wrap:wrap}
+.co .row{min-height:var(--ch)}
+.co-m{font-size:11.5px;color:var(--on-table-soft)}
+.co-m b{color:var(--on-table);font-weight:700}
+
+/* ---- market ---- */
+.mkt{margin-top:11px;background:var(--table-3);border-radius:11px;
+  padding:10px 13px;border:1px dashed rgba(216,177,74,.45);
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.mkt-l{font-family:var(--disp);font-weight:700;font-size:14px;letter-spacing:.09em}
+.mkt-l span{display:block;font-family:var(--body);font-weight:400;font-size:11.5px;
+  letter-spacing:0;color:var(--on-table-soft)}
+
+/* ---- cards ---- */
+.c{width:var(--cw);height:var(--ch);flex:none;position:relative;border-radius:5px;
+  background:var(--paper);overflow:hidden;
+  box-shadow:0 1px 0 rgba(0,0,0,.3),inset 0 0 0 1px rgba(0,0,0,.1)}
+.c .num{position:absolute;left:3px;top:2px;font-family:var(--disp);font-weight:800;
+  font-size:calc(var(--cw)*.52);line-height:1.04;color:var(--t);
+  -webkit-text-stroke:calc(var(--cw)*.034) var(--ink);paint-order:stroke fill;
+  font-variant-numeric:tabular-nums;letter-spacing:-.04em}
+/* the suit repeats as a shape, so the four shades never have to be told apart */
+.sut{position:absolute;left:calc(var(--cw)*.09);top:calc(var(--cw)*.60);
+  width:calc(var(--cw)*.28);height:calc(var(--cw)*.28);overflow:visible;
+  fill:var(--t);stroke:#15181C;stroke-width:9;stroke-linejoin:round;
+  paint-order:stroke}
+.c .bnd{position:absolute;right:0;top:0;bottom:0;width:calc(var(--cw)*.23);
+  background:var(--c);display:flex;justify-content:center;padding-top:2px}
+.c .bnd i{font-family:var(--disp);font-style:normal;font-weight:800;
+  font-size:calc(var(--cw)*.21);color:var(--ink);line-height:1}
+.c.back{background:repeating-linear-gradient(45deg,#17364B 0 5px,#102735 5px 10px);
+  box-shadow:0 1px 0 rgba(0,0,0,.3),inset 0 0 0 1px rgba(0,0,0,.35)}
+.c .who{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:9px;
+  font-weight:700;letter-spacing:.03em;background:#2A4B59;color:#DCEAE8;
+  padding:1px 0;z-index:2}
+.c .mine{background:var(--brass);color:#1C1703}
+.c.best{box-shadow:0 0 0 2px var(--brass),0 1px 0 rgba(0,0,0,.3)}
+.c.fresh{animation:pop 1.4s ease-out}
+@keyframes pop{0%{transform:translateY(-5px);box-shadow:0 0 0 3px var(--brass)}
+  100%{transform:none}}
+.c.ghost{opacity:.95;box-shadow:0 0 0 2px var(--brass),0 0 14px var(--brass-soft)}
+button.c{cursor:pointer;padding:0;border:0;transition:transform .12s}
+button.c:hover:not(:disabled){transform:translateY(-4px)}
+button.c:disabled{cursor:default}
+button.c.sel{transform:translateY(-9px);box-shadow:0 0 0 2px var(--brass),0 7px 14px rgba(0,0,0,.4)}
+button.c.used{opacity:.5}
+.tag{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:9px;
+  font-weight:700;background:var(--brass);color:#1C1703;padding:1px 0;z-index:2}
+.mini{--cw:30px;--ch:46px}
+
+/* ---- bottom dock ---- */
+.dock{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:11px;margin-top:11px;
+  align-items:start}
+.hand{background:var(--table-3);border-radius:11px;padding:11px 13px 14px;min-width:0}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:34px;
+  font-size:13.5px}
+.bar .msg{flex:1 1 230px}
+.bar .msg b{font-weight:700}
+.hgrid{display:flex;gap:13px;flex-wrap:wrap;margin-top:12px}
+.hgrp{display:flex;flex-direction:column;gap:5px}
+.hgrp .lab{font-size:10.5px;letter-spacing:.09em;color:var(--on-table-soft);
+  display:flex;align-items:center;gap:5px;font-weight:600}
+.hgrp .lab i{width:8px;height:8px;border-radius:2px;background:var(--c);
+  display:inline-block}
+.stock{background:var(--table-3);border-radius:11px;padding:11px 13px;min-width:168px;
+  transition:box-shadow .14s}
+.stock.pick{cursor:pointer;box-shadow:0 0 0 2px var(--brass),0 0 16px var(--brass-soft)}
+.stock .mkt-l{margin-bottom:9px}
+.tally{font-size:11.5px;color:var(--on-table-soft);margin-top:9px}
+
+/* ---- rail ---- */
+.rail{display:flex;flex-direction:column;gap:11px}
+.pan{background:var(--table-2);border-radius:11px;padding:11px}
+.pan h2{font-family:var(--disp);font-size:12px;font-weight:700;letter-spacing:.12em;
+  margin:0 0 8px;color:var(--on-table-soft);text-transform:uppercase}
+.pl{padding:7px 9px;border-radius:8px}
+.pl+.pl{margin-top:3px}
+.pl.now{background:var(--brass-soft);box-shadow:inset 3px 0 0 var(--brass)}
+.pl-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:13px;font-weight:600}
+.pl-h em{font-style:normal;font-family:var(--disp);font-weight:700;font-size:15px;
+  font-variant-numeric:tabular-nums}
+.pl-m{font-size:11.5px;color:var(--on-table-soft)}
+.pl .row{margin-top:5px}
+.log{list-style:none;margin:0;padding:0;max-height:272px;overflow-y:auto;font-size:12.5px}
+.log li{padding:5px 0;border-bottom:1px solid var(--line);color:var(--on-table-soft)}
+.log li:first-child{color:var(--on-table)}
+.log li b{color:var(--on-table);font-weight:700}
+.chip{font-weight:700;white-space:nowrap}
+
+/* ---- sheets ---- */
+.scrim{position:fixed;inset:0;background:var(--scrim);display:none;z-index:40;
+  align-items:flex-start;justify-content:center;overflow-y:auto;
+  padding-block:calc(26px + env(safe-area-inset-top,0px)) calc(26px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scrim.on{display:flex}
+.sheet{background:var(--sheet);color:var(--sheet-ink);border-radius:15px;
+  max-width:650px;width:100%;padding:26px 28px 23px;position:relative;
+  box-shadow:0 22px 60px rgba(0,0,0,.42)}
+.sheet h1{font-family:var(--disp);font-size:25px;font-weight:800;margin:0 0 5px;
+  letter-spacing:-.01em;text-wrap:balance}
+.sheet h2{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:.11em;
+  margin:22px 0 7px;text-transform:uppercase;color:var(--sheet-soft)}
+.sheet p,.sheet li{font-size:14.5px;line-height:1.62;max-width:62ch}
+.sheet ul,.sheet ol{padding-left:19px;margin:6px 0}
+.lede{color:var(--sheet-soft)}
+.x{position:absolute;top:13px;right:13px;border:0;background:transparent;
+  font-size:21px;line-height:1;cursor:pointer;padding:6px 10px;border-radius:9px;
+  color:var(--sheet-ink)}
+.x:hover{background:rgba(128,128,128,.17)}
+.tw{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;color:var(--sheet-ink)}
+th,td{border-bottom:1px solid var(--sheet-rule);padding:7px 6px;text-align:center;
+  font-variant-numeric:tabular-nums}
+th{font-size:11.5px;letter-spacing:.07em;color:var(--sheet-soft);font-weight:600;
+  text-transform:uppercase}
+th:first-child,td:first-child{text-align:left}
+tr.win td{font-weight:700}
+.acts{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:19px}
+.sheet .btn{border-color:var(--sheet-rule)}
+.sheet .btn:hover{background:rgba(128,128,128,.12)}
+.sheet .btn.key{color:#1C1703;border-color:var(--brass)}
+.nsel{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 4px}
+.nbtn{flex:1 1 86px;border:1.5px solid var(--sheet-rule);background:transparent;
+  border-radius:12px;padding:15px 8px;cursor:pointer;text-align:center}
+.nbtn b{display:block;font-family:var(--disp);font-size:27px;font-weight:800;line-height:1}
+.nbtn span{display:block;font-size:11.5px;color:var(--sheet-soft);margin-top:3px}
+.nbtn[aria-pressed="true"]{border-color:var(--sheet-ink);background:var(--sheet-ink);
+  color:var(--sheet)}
+.nbtn[aria-pressed="true"] span{color:var(--sheet)}
+.tones{display:flex;gap:10px;justify-content:center;margin:12px 0 5px;flex-wrap:wrap}
+.tones i{background:#FAFAF7;border-radius:5px;padding:3px 10px 5px;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.16)}
+.tones b{display:block;font-family:var(--disp);font-weight:800;font-size:32px;
+  line-height:1.08;color:var(--t);-webkit-text-stroke:1.5px #15181C;paint-order:stroke fill}
+.tones svg{display:block;width:15px;height:15px;margin:1px 0 1px 1px;fill:var(--t);
+  stroke:#15181C;stroke-width:9;stroke-linejoin:round;paint-order:stroke;overflow:visible}
+.mini-note{font-size:13px;color:var(--sheet-soft);text-align:center}
+
+@media (max-width:1240px){
+  .grid{grid-template-columns:1fr}
+  .rail{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+}
+@media (max-width:1000px){ :root{--cw:44px; --ch:68px} }
+@media (max-width:760px){
+  .cos{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dock{grid-template-columns:1fr}
+  .rail{grid-template-columns:1fr}
+}
+@media (max-width:460px){
+  :root{--cw:36px;--ch:55px}
+  .wrap{padding-block:10px 22px}
+  .mark{font-size:21px}
+  .sheet{padding:22px 18px 20px}
+  .cos{gap:7px}
+  .co{padding:8px 5px 9px}
+  .row{gap:4px}
+}
+@media (max-width:380px){ :root{--cw:33px;--ch:51px} }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="mark">WHA<em>L</em>ES</div>
+    <div class="phase" id="phase" aria-live="polite"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="bRules">Rules</button>
+    <button class="btn" id="bNew">New game</button>
+    <div class="stand" id="stand"></div>
+  </header>
+
+  <div class="grid">
+    <section id="board" aria-label="Table">
+      <div class="cos" id="cos"></div>
+      <div class="mkt" id="mkt"></div>
+      <div class="dock">
+        <div class="hand">
+          <div class="bar" id="bar" aria-live="polite"></div>
+          <div class="hgrid" id="hgrid" aria-label="Your hand"></div>
+        </div>
+        <div class="stock" id="stockz"></div>
+      </div>
+    </section>
+    <aside class="rail">
+      <div class="pan"><h2>Players</h2><div id="players"></div></div>
+      <div class="pan"><h2>Log</h2><ul class="log" id="log"></ul></div>
+    </aside>
+  </div>
+</div>
+
+<div class="scrim" id="mStart" role="dialog" aria-modal="true" aria-labelledby="hStart">
+  <div class="sheet">
+    <h1 id="hStart">WHALES</h1>
+    <p class="lede">Plant technology into four companies, register the shares you
+      think will pay, and race to 20 points. Every opponent plays the strong engine.</p>
+    <h2>Players</h2>
+    <div class="nsel" id="nsel">
+      <button class="nbtn" data-n="2" aria-pressed="false"><b>2</b><span>you + 1</span></button>
+      <button class="nbtn" data-n="3" aria-pressed="false"><b>3</b><span>you + 2</span></button>
+      <button class="nbtn" data-n="4" aria-pressed="true"><b>4</b><span>you + 3</span></button>
+      <button class="nbtn" data-n="5" aria-pressed="false"><b>5</b><span>you + 4</span></button>
+    </div>
+    <div class="acts"><button class="btn" id="bRules2">Rules</button>
+      <button class="btn key" id="bStart">Start</button></div>
+  </div>
+</div>
+
+<div class="scrim" id="mRules" role="dialog" aria-modal="true" aria-labelledby="hRules">
+  <div class="sheet">
+    <button class="x" data-close aria-label="Close rules">&times;</button>
+    <h1 id="hRules">How to play</h1>
+    <p class="lede">Four companies, 40 cards, a shared market. The companies are
+      scored as poker hands; you score the shares you kept.</p>
+
+    <h2>The deck</h2>
+    <p>Ranks 1&ndash;10 in four suits, each one a shade and a shape: black triangle,
+      dark star, light circle, white square. The suit only matters for a flush
+      or a straight flush.</p>
+    <div class="tones" id="tdemo"></div>
+    <p class="mini-note">Each company holds ranks 1&ndash;10 once; so does each shade.</p>
+
+    <h2>Each turn &mdash; two cards</h2>
+    <ol>
+      <li><b>Field.</b> The round's lead plays one card face up to the
+        <b>market</b>. Everyone else plays one to a <b>company</b> &mdash; only one
+        of those holding the fewest cards. Once the market is full the lead plays
+        to a company too.</li>
+      <li><b>Register.</b> Play one card in front of you. Its letter is the share
+        you own.</li>
+    </ol>
+    <p>The lead passes clockwise each round. Cards planted in a company after the
+      opening one are face down; you can always see the ones you planted.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Players</th><th>Hand</th><th>Rounds</th><th>Company</th><th>Market</th><th>Face up</th></tr></thead>
+      <tbody>
+        <tr><td>2</td><td>12</td><td>6</td><td>3</td><td>4</td><td>1</td></tr>
+        <tr><td>3</td><td>8</td><td>4</td><td>3</td><td>4</td><td>1</td></tr>
+        <tr><td>4</td><td>8</td><td>4</td><td>4</td><td>4</td><td>2</td></tr>
+        <tr><td>5</td><td>7</td><td>3</td><td>4</td><td>4</td><td>2</td></tr>
+      </tbody></table></div>
+    <p>At five players one market card comes off the deck and everyone registers a
+      share before round one.</p>
+
+    <h2>Scoring</h2>
+    <p>Every card turns face up. Each company makes its best five from its own
+      cards plus the market. Ranking, high to low: straight flush, four of a kind,
+      full house, flush, straight, three of a kind, two pair, one pair, high card.</p>
+    <p>Same hand &rarr; the higher top card wins. Still equal &rarr; the earlier
+      letter wins, A &#9656; B &#9656; C &#9656; D.</p>
+    <p>Share price by place: <b>1st 3</b>, <b>2nd 2</b>, <b>3rd 1</b>,
+      <b>4th &minus;1</b>. Score each share at its company's price. First to
+      <b>20 points</b> over repeated games wins the match.</p>
+
+    <h2>Reading a card</h2>
+    <p>The rank sits in the top-left corner, the company colour runs down the right
+      edge. On the table, overlap to the right to read the numbers and to the left
+      to read the companies.</p>
+  </div>
+</div>
+
+<div class="scrim" id="mEnd" role="dialog" aria-modal="true" aria-labelledby="hEnd">
+  <div class="sheet">
+    <button class="x" data-close aria-label="Close results">&times;</button>
+    <h1 id="hEnd"></h1>
+    <p class="lede" id="eSub"></p>
+    <div class="tw" id="eCo"></div>
+    <div class="tw" id="ePl"></div>
+    <div id="eMatch"></div>
+    <div class="acts"><button class="btn" data-close>See the table</button>
+      <button class="btn" id="bAgain">New game</button>
+      <button class="btn key" id="bNext">Next game</button></div>
+  </div>
+</div>
+
+<script>
+// ===== WHALES 카드판 v6 : 로직 =====
+const CO = [
+  { L: "A", name: "APPLETREE", color: "#4A9A63" },
+  { L: "B", name: "BOWING",    color: "#5C79C4" },
+  { L: "C", name: "COSTGO",    color: "#E5812C" },
+  { L: "D", name: "DUNKING",   color: "#E8C32E" },
+];
+// the four suits are four shades of the numeral
+const TONE = ["#15181C", "#6B737B", "#C3C9CF", "#FFFFFF"];
+const TONE_NAME = ["black", "dark", "light", "white"];
+const HAND_NAMES = ["High Card", "One Pair", "Two Pair", "Three of a Kind",
+  "Straight", "Flush", "Full House", "Four of a Kind", "Straight Flush"];
+const PRICE = [3, 2, 1, -1];
+const TARGET = 20;
+const OPEN_BY_N = { 2: 1, 3: 1, 4: 2, 5: 2 };
+
+function makeDeck() {
+  const d = []; let id = 0;
+  for (let s = 0; s < 4; s++) for (let r = 1; r <= 10; r++) d.push({ id: id++, s, r, logo: (s + r) % 4 });
+  return d;
+}
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+const B5 = Math.pow(11, 5);
+function evalCards(cs) {
+  const rc = new Array(11).fill(0), sc = [[], [], [], []];
+  for (const c of cs) { rc[c.r]++; sc[c.s].push(c.r); }
+  const enc = (cat, ks) => { let v = cat; for (let k = 0; k < 5; k++) v = v * 11 + (ks[k] || 0); return v; };
+  const strTop = set => { for (let t = 10; t >= 5; t--) { let ok = true; for (let k = 0; k < 5; k++) if (!set.has(t - k)) { ok = false; break; } if (ok) return t; } return 0; };
+  for (const suit of sc) if (suit.length >= 5) { const t = strTop(new Set(suit)); if (t) return enc(8, [t]); }
+  const byCnt = []; for (let r = 10; r >= 1; r--) if (rc[r]) byCnt.push([rc[r], r]);
+  byCnt.sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+  const kick = (ex, n) => { const o = []; for (let r = 10; r >= 1 && o.length < n; r--) if (rc[r] && !ex.includes(r)) o.push(r); return o; };
+  if (byCnt[0] && byCnt[0][0] >= 4) return enc(7, [byCnt[0][1], ...kick([byCnt[0][1]], 1)]);
+  const trips = byCnt.filter(x => x[0] === 3).map(x => x[1]), pairs = byCnt.filter(x => x[0] >= 2).map(x => x[1]);
+  if (trips.length && pairs.length >= 2) { const t = trips[0]; return enc(6, [t, pairs.find(x => x !== t)]); }
+  for (const suit of sc) if (suit.length >= 5) return enc(5, suit.slice().sort((a, b) => b - a).slice(0, 5));
+  const st = strTop(new Set(cs.map(c => c.r))); if (st) return enc(4, [st]);
+  if (trips.length) return enc(3, [trips[0], ...kick([trips[0]], 2)]);
+  if (pairs.length >= 2) return enc(2, [pairs[0], pairs[1], ...kick([pairs[0], pairs[1]], 1)]);
+  if (pairs.length) return enc(1, [pairs[0], ...kick([pairs[0]], 3)]);
+  return enc(0, kick([], 5));
+}
+const handCat = v => Math.floor(v / B5);
+// 최고 5장 (결과 표시용)
+function bestFive(cs, ownIds) {
+  const isOwn = c => (ownIds ? (ownIds.has(c.id) ? 1 : 0) : 0);
+  if (cs.length <= 5) return { v: evalCards(cs), own: cs.reduce((a, c) => a + isOwn(c), 0), cards: cs.slice() };
+  let best = -1, bestOwn = -1, pick = null;
+  const n = cs.length;
+  const rec = (start, chosen) => {
+    if (chosen.length === 5) {
+      const sub = chosen.map(i => cs[i]), v = evalCards(sub), o = sub.reduce((a, c) => a + isOwn(c), 0);
+      if (v > best || (v === best && o > bestOwn)) { best = v; bestOwn = o; pick = sub; }
+      return;
+    }
+    for (let i = start; i <= n - (5 - chosen.length); i++) rec(i + 1, chosen.concat([i]));
+  };
+  rec(0, []);
+  return { v: best, own: bestOwn, cards: pick };
+}
+
+// ===== 게임 =====
+// opts: { n, start, stock: 'open'|'hidden' }
+// 4라운드. 매 차례 2장: 주식 1장 먼저, 필드 1장 (선=마켓, 나머지=카드가 가장 적은 기업)
+// 인원별 구성. 어느 인원이든 끝나면 기업마다 4장(시작 1 + 심기 3), 마켓 4장, 각자 주식 4장.
+// 어느 인원이든 평가 카드 8장(기업 + 마켓), 각자 주식 4장, 손패에서 주식 4장을 뺀 나머지를 필드에 냄.
+const SETUP = {
+  2: { hand: 12, rounds: 6, compCap: 3, maxOpen: 1, mkt: 4 },
+  3: { hand: 8, rounds: 4, compCap: 3, maxOpen: 1 },
+  4: { hand: 8, rounds: 4, compCap: 4, maxOpen: 4 },
+  5: { hand: 7, rounds: 3, preDeckMarket: true, preStock: true, compCap: 4, maxOpen: 4 },
+};
+const mktCap = n => SETUP[n].mkt !== undefined ? SETUP[n].mkt : SETUP[n].rounds + (SETUP[n].preDeckMarket ? 1 : 0);
+// 선은 마켓에 낸다. 단 마켓이 다 차면 선도 기업에 놓는다. (2인 후반 라운드)
+const mustMarket = (G, E) => !!E.lead && G.mkt.length < mktCap(G.n);
+const evalCardCount = n => SETUP[n].compCap + mktCap(n);
+function buildSchedule(n, start) {
+  const S = SETUP[n], ev = [];
+  if (S.preDeckMarket) ev.push({ type: "deckmkt", round: -1 });
+  if (S.preStock) for (let k = 0; k < n; k++) ev.push({ type: "stockonly", p: (start + k) % n, round: -1 });
+  for (let r = 0; r < S.rounds; r++) {
+    const s = (start + r) % n;
+    for (let k = 0; k < n; k++) ev.push({ type: "turn", p: (s + k) % n, round: r, lead: k === 0 });
+  }
+  if (S.finalPlant) {
+    const s = (start + S.rounds) % n;
+    for (let k = 0; k < n; k++) ev.push({ type: "plant", p: (s + k) % n, round: S.rounds });
+    ev.push({ type: "deckplant", round: S.rounds });
+  }
+  return ev;
+}
+function createGame(o) {
+  const all = makeDeck(), deck = shuffle(all.slice());
+  const S = SETUP[o.n];
+  const G = { n: o.n, opts: o, all, deck, comp: [[], [], [], []], mkt: [], stocks: [], hands: [],
+    ev: buildSchedule(o.n, o.start), ei: 0, rounds: S.rounds, setup: S,
+    price: PRICE.slice(), openCount: OPEN_BY_N[o.n] };
+  for (let c = 0; c < 4; c++) G.comp[c].push({ card: deck.pop(), owner: -1, open: G.openCount > 0 });
+  for (let p = 0; p < o.n; p++) { G.hands.push(deck.splice(-S.hand, S.hand)); G.stocks.push([]); }
+  return G;
+}
+function allowed(G) { const m = Math.min(...G.comp.map(x => x.length)); return [0, 1, 2, 3].filter(c => G.comp[c].length === m); }
+function compValues(G) { return G.comp.map(cc => evalCards(cc.map(x => x.card).concat(G.mkt))); }
+// tie-break: highest card in the company's best five, then the earlier letter
+function topCard(G, c) {
+  const cs = G.comp[c].map(x => x.card).concat(G.mkt);
+  return Math.max(...bestFive(cs).cards.map(x => x.r));
+}
+function ranksOf(v, top) {
+  const t = c => (top ? top[c] : 0);
+  const ord = [0, 1, 2, 3].sort((a, b) => v[b] - v[a] || t(b) - t(a) || a - b);
+  const rank = new Array(4);
+  ord.forEach((c, i) => { rank[c] = i; });
+  return rank;
+}
+function scoresOf(G) {
+  const v = compValues(G);
+  let top = null;
+  for (let a = 0; a < 4 && !top; a++) for (let b = a + 1; b < 4; b++)
+    if (v[a] === v[b]) top = [0, 1, 2, 3].map(c => topCard(G, c));
+  const rank = ranksOf(v, top);
+  const sc = G.stocks.map(st => st.reduce((a, c) => a + G.price[rank[c.logo]], 0));
+  return { v, top, rank, sc };
+}
+function judge(G) {
+  const r = scoresOf(G), mx = Math.max(...r.sc);
+  let tied = []; r.sc.forEach((x, i) => { if (x === mx) tied.push(i); });
+  let tb = false;
+  if (tied.length > 1) {
+    tb = true;
+    const top = G.stocks.map(st => st.filter(c => r.rank[c.logo] === 0).length);
+    const m2 = Math.max(...tied.map(p => top[p]));
+    tied = tied.filter(p => top[p] === m2);
+  }
+  return { ...r, win: tied, tiebreak: tb };
+}
+// 차례 적용. m = { si, fi, ci }  (ci === -1 이면 마켓)
+function plant(G, c, card, owner) { G.comp[c].push({ card, owner, open: G.comp[c].length < G.openCount }); }
+function doTurn(G, p, m) {
+  const hand = G.hands[p];
+  const si = m.si === undefined ? -1 : m.si, fi = m.fi === undefined ? -1 : m.fi;
+  const s = si >= 0 ? hand[si] : null, f = fi >= 0 ? hand[fi] : null;
+  if (s) G.stocks[p].push(s);
+  if (f) { if (m.ci === -1) G.mkt.push(f); else plant(G, m.ci, f, p); }
+  G.hands[p] = hand.filter((_, i) => i !== si && i !== fi);
+  return { s, f };
+}
+// 덱에서 자동 처리되는 이벤트
+function doAuto(G, E) {
+  if (E.type === "deckmkt") { const c = G.deck.pop(); G.mkt.push(c); return { mkt: c }; }
+  const c = G.deck.pop(), ci = allowed(G)[0];
+  plant(G, ci, c, -2);
+  return { plantCo: ci, card: c };
+}
+
+// ===== 추론 =====
+function knownComp(G, p, c) { return G.comp[c].filter(x => x.open || x.owner === p).map(x => x.card); }
+function stockVisible(G, viewer, q) { return G.opts.stock === "open" || viewer === q; }
+
+// ===== 휴리스틱 (보통 CPU 겸 롤아웃 정책) =====
+function heurTurn(G, p, lead, kind) {
+  const needStock = kind !== "plant", needField = kind !== "stockonly";
+  const hand = G.hands[p];
+  // 1) 주식: 지금 보이는 카드 기준 가장 강한 기업부터, 그 로고의 가장 낮은 카드
+  const est = [0, 1, 2, 3].map(c => evalCards(knownComp(G, p, c).concat(G.mkt)));
+  const order = [0, 1, 2, 3].sort((a, b) => est[b] - est[a]);
+  let si = -1;
+  if (needStock) for (const co of order) { let lo = 99; hand.forEach((cd, i) => { if (cd.logo === co && cd.r < lo) { lo = cd.r; si = i; } }); if (si >= 0) break; }
+  const stake = [0, 0, 0, 0];
+  for (const c of G.stocks[p]) stake[c.logo]++;
+  if (si >= 0) stake[hand[si].logo]++;
+  if (!needField) return { si, fi: -1, ci: -1 };
+  // 2) 필드
+  if (lead) {
+    let best = -1e9, fi = -1;
+    hand.forEach((cd, i) => {
+      if (i === si) return;
+      const e2 = [0, 1, 2, 3].map(c => evalCards(knownComp(G, p, c).concat(G.mkt, [cd])));
+      const rk = ranksOf(e2);
+      let v = 0; for (let c = 0; c < 4; c++) v += stake[c] * G.price[rk[c]];
+      v -= cd.r * 0.01; v += Math.random() * 0.005;
+      if (v > best) { best = v; fi = i; }
+    });
+    return { si, fi, ci: -1 };
+  }
+  const al = allowed(G);
+  let ci = al[0], bs = -1;
+  for (const c of al) if (stake[c] > bs || (stake[c] === bs && Math.random() < 0.5)) { bs = stake[c]; ci = c; }
+  if (bs === 0 && G.opts.stock === "open") {
+    let os = -1; for (const c of al) { let t = 0; for (let q = 0; q < G.n; q++) if (q !== p) for (const x of G.stocks[q]) if (x.logo === c) t++; if (t > os) { os = t; ci = c; } }
+  }
+  const base = knownComp(G, p, ci).concat(G.mkt);
+  let hi = -1, lo = 1e18, bi = -1, wi = -1;
+  hand.forEach((cd, i) => { if (i === si) return; const v = evalCards(base.concat([cd])); if (v > hi) { hi = v; bi = i; } if (v < lo) { lo = v; wi = i; } });
+  return { si, fi: bs > 0 ? bi : wi, ci };
+}
+
+// ===== 몬테카를로 (강함 CPU) =====
+function cloneG(G) {
+  return { n: G.n, opts: G.opts, all: G.all, price: G.price, openCount: G.openCount, deck: G.deck.slice(), comp: G.comp.map(x => x.slice()), mkt: G.mkt.slice(),
+    stocks: G.stocks.map(x => x.slice()), hands: G.hands.map(x => x.slice()), ev: G.ev, ei: G.ei };
+}
+function determinize(G, p) {
+  const D = cloneG(G), seen = new Set();
+  for (const cc of G.comp) for (const x of cc) if (x.open || x.owner === p) seen.add(x.card.id);
+  for (const c of G.mkt) seen.add(c.id);
+  for (const c of G.hands[p]) seen.add(c.id);
+  for (let q = 0; q < G.n; q++) if (stockVisible(G, p, q)) for (const c of G.stocks[q]) seen.add(c.id);
+  const pool = shuffle(G.all.filter(c => !seen.has(c.id)));
+  for (const cc of D.comp) for (let k = 0; k < cc.length; k++) if (!cc[k].open && cc[k].owner !== p) cc[k] = { card: pool.pop(), owner: cc[k].owner, open: false };
+  for (let q = 0; q < G.n; q++) if (q !== p) {
+    D.hands[q] = pool.splice(-G.hands[q].length, G.hands[q].length);
+    if (!stockVisible(G, p, q)) D.stocks[q] = pool.splice(-G.stocks[q].length, G.stocks[q].length);
+  }
+  D.deck = pool;
+  return D;
+}
+function playout(D, from) {
+  for (let e = from; e < D.ev.length; e++) { const E = D.ev[e];
+    if (E.type === "deckmkt" || E.type === "deckplant") { doAuto(D, E); continue; }
+    doTurn(D, E.p, heurTurn(D, E.p, mustMarket(D, E), E.type)); }
+  return judge(D);
+}
+function candidates(G, p, E) {
+  const hand = G.hands[p], out = [];
+  const stockOpts = () => { const b = {}; hand.forEach((cd, i) => { if (!(cd.logo in b) || cd.r < hand[b[cd.logo]].r) b[cd.logo] = i; }); return Object.values(b); };
+  const mkt = mustMarket(G, E);
+  if (E.type === "stockonly") { for (const si of stockOpts()) out.push({ si, fi: -1, ci: -1 }); return out; }
+  if (E.type === "plant") {
+    for (const ci of allowed(G)) {
+      const base = knownComp(G, p, ci).concat(G.mkt);
+      const sc = hand.map((cd, i) => [evalCards(base.concat([cd])), i]).sort((a, b) => b[0] - a[0]);
+      for (const fi of new Set([sc[0][1], sc[sc.length - 1][1]])) out.push({ si: -1, fi, ci });
+    }
+    return out;
+  }
+  for (const si of stockOpts()) {
+    if (mkt) { hand.forEach((_, fi) => { if (fi !== si) out.push({ si, fi, ci: -1 }); }); continue; }
+    for (const ci of allowed(G)) {
+      const base = knownComp(G, p, ci).concat(G.mkt);
+      const sc = hand.map((cd, i) => [evalCards(base.concat([cd])), i]).filter(x => x[1] !== si).sort((a, b) => b[0] - a[0]);
+      const pick = new Set([sc[0][1], sc[1] && sc[1][1], sc[sc.length - 1][1]].filter(x => x !== undefined));
+      for (const fi of pick) out.push({ si, fi, ci });
+    }
+  }
+  return out;
+}
+function cpuSmart(G, p, budgetMs) {
+  const E = G.ev[G.ei];
+  const cands = candidates(G, p, E);
+  if (cands.length === 1) return cands[0];
+  const tot = cands.map(() => 0);
+  const t0 = Date.now(); let it = 0;
+  while ((Date.now() - t0 < budgetMs && it < 400) || it < 8) {
+    const D0 = determinize(G, p);
+    for (let k = 0; k < cands.length; k++) {
+      const D = cloneG(D0); D.deck = shuffle(D.deck);
+      doTurn(D, p, cands[k]);
+      const r = playout(D, G.ei + 1);
+      let mo = -1e9; for (let q = 0; q < G.n; q++) if (q !== p) mo = Math.max(mo, r.sc[q]);
+      tot[k] += (r.win.includes(p) ? 1 / r.win.length : 0) + 0.02 * (r.sc[p] - mo);
+    }
+    it++;
+  }
+  let b = 0; for (let k = 1; k < cands.length; k++) if (tot[k] > tot[b]) b = k;
+  return cands[b];
+}
+function cpuNormal(G, p) { const E = G.ev[G.ei]; return heurTurn(G, p, mustMarket(G, E), E.type); }
+
+if (typeof module !== "undefined") module.exports = { CO, TONE, TONE_NAME, HAND_NAMES, PRICE, TARGET, makeDeck, evalCards, handCat, bestFive,
+  SETUP, mktCap, mustMarket, evalCardCount, buildSchedule, createGame, allowed, doAuto, plant, compValues, topCard, ranksOf, scoresOf, judge, doTurn, knownComp, heurTurn, cpuSmart, cpuNormal };
+
+</script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const COV = ["var(--coA)","var(--coB)","var(--coC)","var(--coD)"];
+  const TV = ["var(--t0)","var(--t1)","var(--t2)","var(--t3)"];
+  let G=null, N=4, sel=null, asg=null, busy=true, over=false, thinking=-1,
+      fresh=null, res=null, log=[], match=null;
+
+  const who = p => p===0 ? "You" : "CPU "+p;
+  const whoV = p => p===0 ? "You" : "CPU "+p;
+
+  // ---------- card markup ----------
+  const SHAPE = [
+    `<path d="M50 9 91 82 9 82Z"/>`,
+    `<path d="M50 4 61.2 34.6 93.8 35.8 68.1 55.9 77 87.2 50 69 23 87.2 31.9 55.9 6.2 35.8 38.8 34.6Z"/>`,
+    `<circle cx="50" cy="50" r="39"/>`,
+    `<rect x="15" y="15" width="70" height="70" rx="9"/>`];
+  const SHAPE_NAME = ["triangle","star","circle","square"];
+  const suit = (s, cls="sut") =>
+    `<svg class="${cls}" viewBox="0 0 100 100" aria-hidden="true">${SHAPE[s]}</svg>`;
+  const card = (c, cls="", extra="", tag="div", label="") =>
+    `<${tag} class="c ${cls}" style="--c:${COV[c.logo]};--t:${TV[c.s]}" ${extra}>
+       <span class="num">${c.r}</span>${suit(c.s)}<span class="bnd"><i>${CO[c.logo].L}</i></span>${label}
+     </${tag}>`;
+  const back = (label="") => `<div class="c back">${label}</div>`;
+  const chip = c => `<span class="chip">${c.r}<small style="opacity:.6">/${CO[c.logo].L}</small></span>`;
+  const aria = c => `${CO[c.logo].name} ${c.r}, ${TONE_NAME[c.s]} ${SHAPE_NAME[c.s]}`;
+
+  // ---------- sheets ----------
+  const open = id => { $(id).classList.add("on");
+    const b = $(id).querySelector(".btn.key:not([hidden])") || $(id).querySelector("button");
+    if (b) b.focus(); };
+  const shut = id => $(id).classList.remove("on");
+  document.querySelectorAll("[data-close]").forEach(b =>
+    b.onclick = () => b.closest(".scrim").classList.remove("on"));
+  document.querySelectorAll(".scrim").forEach(s => s.addEventListener("click", e => {
+    if (e.target === s && s.id !== "mStart") s.classList.remove("on"); }));
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    for (const id of ["mRules","mEnd"]) if ($(id).classList.contains("on")) return shut(id);
+    if (sel !== null) { sel = null; render(); }
+  });
+  $("nsel").addEventListener("click", e => {
+    const b = e.target.closest("[data-n]"); if (!b) return;
+    N = +b.dataset.n;
+    document.querySelectorAll("#nsel .nbtn").forEach(x =>
+      x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  });
+  $("bStart").onclick = () => {
+    match = { no:0, totals:new Array(N).fill(0), done:false };
+    shut("mStart"); start();
+  };
+  $("bRules").onclick = $("bRules2").onclick = () => open("mRules");
+  $("bNew").onclick = () => open("mStart");
+  $("bAgain").onclick = () => { shut("mEnd"); open("mStart"); };
+  $("bNext").onclick = () => { shut("mEnd"); start(); };
+
+  // ---------- game ----------
+  function start(){
+    const st = Math.floor(Math.random() * N); match.no++;
+    G = createGame({ n:N, start:st, stock:"open" });
+    G.hands[0].sort((a,b)=>a.logo-b.logo||a.r-b.r);
+    sel=null; asg=null; over=false; thinking=-1; fresh=null; res=null; busy=true;
+    log = [`Game ${match.no}. Random lead — ${who(st)} starts. ${G.rounds} rounds.`];
+    if (match.no > 1) log.unshift("Match: " + match.totals.map((t,p)=>`${who(p)} ${t}`).join(" · "));
+    render(); setTimeout(step, 340);
+  }
+  const ev = () => G && G.ei < G.ev.length ? G.ev[G.ei] : null;
+  const mine = () => G && !over && !busy && ev() && ev().p === 0;
+  const isLead = () => mine() && mustMarket(G, ev());
+  const needF = () => mine() && ev().type !== "stockonly";
+  const needS = () => mine() && ev().type !== "plant";
+  const done = () => mine() && asg && (!needS()||asg.si!==null) && (!needF()||asg.fi!==null);
+  const slot = i => asg && (asg.si===i ? "si" : asg.fi===i ? "fi" : null);
+
+  function step(){
+    const E = ev();
+    if (!E) return finish();
+    if (E.type === "deckmkt" || E.type === "deckplant") {
+      busy = true; const r = doAuto(G, E); G.ei++;
+      fresh = E.type==="deckmkt" ? {mkt:G.mkt.length-1} : {co:r.plantCo};
+      log.unshift(E.type==="deckmkt"
+        ? `Setup — ${chip(r.mkt)} from the deck to the market.`
+        : `A card from the deck goes face down into ${CO[r.plantCo].name}.`);
+      render(); setTimeout(step, 620); return;
+    }
+    if (E.p === 0) { busy=false; sel=null; asg={si:null,fi:null,ci:null}; render(); return; }
+    busy = true; thinking = E.p; render();
+    setTimeout(() => act(E.p, E, cpuSmart(G, E.p, 620)), 300);
+  }
+  function act(p, E, m){
+    const r = doTurn(G, p, m);
+    fresh = r.f ? (m.ci===-1 ? {mkt:G.mkt.length-1} : {co:m.ci}) : null;
+    const bits = [];
+    if (r.f) {
+      const opened = m.ci!==-1 && G.comp[m.ci][G.comp[m.ci].length-1].open;
+      bits.push(m.ci===-1 ? `market ${chip(r.f)}`
+        : opened ? `${CO[m.ci].name} ${chip(r.f)} face up`
+        : `${CO[m.ci].name} face down${p===0?` (${chip(r.f)})`:""}`);
+    }
+    if (r.s) bits.push(`registers ${CO[r.s.logo].L}`);
+    const tag = E.type==="stockonly" ? " opening share"
+      : E.type==="plant" ? " final plant"
+      : mustMarket(G,E) ? ` R${E.round+1} lead` : "";
+    log.unshift(`<b>${who(p)}</b>${tag} — ${bits.join(", ")}`);
+    G.ei++; thinking=-1; sel=null; asg=null; busy=true;
+    const nx = ev();
+    if (nx && nx.round !== E.round && nx.round >= 0)
+      log.unshift(`<b>Round ${nx.round+1}</b> — ${who(nx.p)} leads.`);
+    render(); setTimeout(step, p===0 ? 210 : 560);
+  }
+  function finish(){
+    over = true; busy = true; res = judge(G);
+    const r = res;
+    let champs = null;
+    r.sc.forEach((s,p) => match.totals[p] = Math.max(0, match.totals[p] + s));
+    const mx = Math.max(...match.totals);
+    if (mx >= TARGET) { champs = match.totals.map((t,p)=>t===mx?p:-1).filter(p=>p>=0); match.done=true; }
+
+    $("hEnd").textContent = champs
+      ? (champs.length>1 ? `Match tied: ${champs.map(who).join(", ")}`
+         : champs[0]===0 ? "You win the match" : `${who(champs[0])} wins the match`)
+      : (r.win.length>1 ? `Game ${match.no} tied: ${r.win.map(who).join(", ")}`
+         : r.win[0]===0 ? `You take game ${match.no}` : `${who(r.win[0])} takes game ${match.no}`);
+    $("eSub").textContent = champs ? `First past ${TARGET} points after ${match.no} games.`
+      : r.tiebreak ? `This game's score. Tied, so the most 1st-place shares won.`
+      : `This game's score. Playing to ${TARGET}.`;
+
+    const ord = [0,1,2,3].sort((a,b)=>r.rank[a]-r.rank[b]);
+    const dup = c => [0,1,2,3].some(x=>x!==c && r.v[x]===r.v[c]);
+    $("eCo").innerHTML = `<table><thead><tr><th>Company</th><th>Place</th><th>Hand</th>
+      <th>Top</th><th>Price</th></tr></thead><tbody>${ord.map(c=>{
+      const bf = bestFive(G.comp[c].map(x=>x.card).concat(G.mkt));
+      const top = Math.max(...bf.cards.map(x=>x.r));
+      return `<tr><td>${CO[c].L} ${CO[c].name}</td><td>${r.rank[c]+1}</td>
+        <td>${HAND_NAMES[handCat(r.v[c])]}${dup(c)?" <small>tied</small>":""}</td>
+        <td>${top}</td><td>${G.price[r.rank[c]]}</td></tr>`;}).join("")}</tbody></table>`;
+
+    const pr = r.sc.map((_,p)=>p).sort((a,b)=>r.sc[b]-r.sc[a]);
+    $("ePl").innerHTML = `<table><thead><tr><th>Player</th>${CO.map(c=>`<th>${c.L}</th>`).join("")}
+      <th>Game</th><th>Match</th></tr></thead><tbody>${pr.map(p=>{
+      const cnt=[0,0,0,0]; G.stocks[p].forEach(c=>cnt[c.logo]++);
+      return `<tr class="${(champs||r.win).includes(p)?"win":""}"><td>${who(p)}</td>${
+        cnt.map((x,c)=>`<td>${x?`${x}<small> (${x*G.price[r.rank[c]]})</small>`:"·"}</td>`).join("")}
+        <td>${r.sc[p]>0?"+":""}${r.sc[p]}</td><td>${match.totals[p]}</td></tr>`;}).join("")}</tbody></table>`;
+
+    $("eMatch").innerHTML = champs ? "" :
+      `<p class="lede" style="margin-top:14px">${match.totals.map((t,p)=>
+        `${who(p)} needs ${Math.max(0,TARGET-t)}`).join(" · ")}</p>`;
+    $("bNext").hidden = !!champs;
+    $("bAgain").classList.toggle("key", !!champs);
+    log.unshift(champs
+      ? `<b>Match over.</b> ${match.totals.map((t,p)=>`${who(p)} ${t}`).join(" · ")}`
+      : `<b>Game ${match.no} scored.</b> ${match.totals.map((t,p)=>`${who(p)} ${t}`).join(" · ")}`);
+    render(); setTimeout(()=>open("mEnd"), 520);
+  }
+
+  // ---------- input ----------
+  $("hgrid").addEventListener("click", e => {
+    const b = e.target.closest("[data-i]"); if (!b || !mine()) return;
+    const i = +b.dataset.i, f = slot(i);
+    if (f) { asg[f]=null; if (f==="fi") asg.ci=null; sel=null; return render(); }
+    if (!needF()) { asg.si=i; sel=null; }
+    else if (asg.fi===null && isLead()) { asg.fi=i; asg.ci=-1; sel=null; }
+    else if (asg.fi===null) { sel = sel===i ? null : i; }
+    else if (needS() && asg.si===null) { asg.si=i; sel=null; }
+    render();
+  });
+  $("cos").addEventListener("click", e => {
+    if (!mine() || sel===null || isLead() || !needF()) return;
+    const t = e.target.closest("[data-co]"); if (!t) return;
+    const c = +t.dataset.co; if (!allowed(G).includes(c)) return;
+    asg.fi = sel; asg.ci = c; sel = null; render();
+  });
+  $("stockz").addEventListener("click", () => {
+    if (!mine() || sel===null || !needS() || asg.si!==null) return;
+    asg.si = sel; sel = null; render();
+  });
+  $("bar").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.a === "clear") { asg={si:null,fi:null,ci:null}; sel=null; render(); }
+    if (b.dataset.a === "go" && done())
+      act(0, ev(), { si: asg.si ?? -1, fi: asg.fi ?? -1, ci: asg.ci });
+    if (b.dataset.a === "res") open("mEnd");
+    if (b.dataset.a === "next") { shut("mEnd"); start(); }
+  });
+
+  // ---------- render ----------
+  function render(){
+    if (!G) return;
+    const E = ev(), hand = G.hands[0];
+    const al = E ? allowed(G) : [];
+    const picking = mine() && needF() && !isLead() && sel!==null && asg.fi===null;
+    const bf = over ? G.comp.map(cc =>
+      new Set(bestFive(cc.map(x=>x.card).concat(G.mkt)).cards.map(c=>c.id))) : null;
+
+    // companies
+    let h = "";
+    for (let c=0;c<4;c++){
+      const tgt = picking && al.includes(c), dim = picking && !al.includes(c);
+      let cards="", known=knownComp(G,0,c).slice(), hid=0;
+      G.comp[c].forEach((x,k)=>{
+        const isNew = fresh && fresh.co===c && k===G.comp[c].length-1;
+        const cls = "board"+(over && bf[c].has(x.card.id)?" best":"")+(isNew?" fresh":"");
+        if (x.open) cards += card(x.card, cls, `aria-label="${aria(x.card)}"`);
+        else if (x.owner === 0)
+          cards += card(x.card, cls, `aria-label="your plant, ${aria(x.card)}"`, "div",
+            over?"":`<span class="who mine">you</span>`);
+        else if (over) cards += card(x.card, cls, `aria-label="${aria(x.card)}"`, "div",
+            `<span class="who">${x.owner===-2?"deck":who(x.owner)}</span>`);
+        else { cards += back(`<span class="who">${x.owner===-2?"deck":who(x.owner)}</span>`); hid++; }
+      });
+      let used = G.comp[c].length;
+      if (asg && asg.ci===c && asg.fi!==null){
+        cards += card(hand[asg.fi], "ghost", "", "div", `<span class="tag">plant</span>`);
+        known.push(hand[asg.fi]); used++;
+      }
+      if (!over) for (let k=used;k<SETUP[G.n].compCap;k++) cards += `<div class="c slot"></div>`;
+      const info = over
+        ? `<span class="pl">${res.rank[c]+1}</span><b>${HAND_NAMES[handCat(res.v[c])]}</b>
+           <br><span class="pr">pays ${G.price[res.rank[c]]}</span>`
+        : `<b>${HAND_NAMES[handCat(evalCards(known.concat(G.mkt,
+             asg&&asg.ci===-1&&asg.fi!==null?[hand[asg.fi]]:[])))]}</b> showing${
+             hid?`<br>${hid} face down`:""}`;
+      const ms = G.stocks[0].filter(s=>s.logo===c).length
+        + (asg&&asg.si!==null&&hand[asg.si].logo===c?1:0);
+      h += `<article class="co ${tgt?"pick":""} ${dim?"dim":""}" style="--c:${COV[c]}"
+        data-co="${c}" ${tgt?`tabindex="0" role="button" aria-label="Plant into ${CO[c].name}"`
+        :`aria-label="${CO[c].name}"`}>
+        <div class="co-h"><span class="co-L">${CO[c].L}</span>
+          <span class="co-n">${CO[c].name}</span></div>
+        <div class="co-v">${info}</div>
+        <div class="row">${cards}</div>
+        <div class="co-m">${ms?`your shares <b>${ms}</b>`:"no shares"}</div>
+      </article>`;
+    }
+    $("cos").innerHTML = h;
+
+    // market
+    let m = `<div class="mkt-l">MARKET<span>counts for every company</span></div><div class="row">`;
+    G.mkt.forEach((c,k)=> m += card(c, fresh&&fresh.mkt===k?"fresh":"", `aria-label="market ${aria(c)}"`));
+    let mu = G.mkt.length;
+    if (asg && asg.ci===-1 && asg.fi!==null){
+      m += card(hand[asg.fi], "ghost", "", "div", `<span class="tag">market</span>`); mu++; }
+    if (!over) for (let k=mu;k<mktCap(G.n);k++) m += `<div class="c slot"></div>`;
+    $("mkt").innerHTML = m + "</div>";
+
+    // my shares
+    let s = `<div class="mkt-l">YOUR SHARES<span>face up</span></div><div class="row">`;
+    G.stocks[0].forEach(c => s += card(c, "", `aria-label="your share ${aria(c)}"`));
+    if (asg && asg.si!==null) s += card(hand[asg.si], "ghost", "", "div", `<span class="tag">share</span>`);
+    const cnt=[0,0,0,0]; G.stocks[0].forEach(c=>cnt[c.logo]++);
+    $("stockz").innerHTML = s + `</div><div class="tally">${
+      cnt.map((x,c)=>x?`${CO[c].L} ${x}`:"").filter(Boolean).join("  ·  ") || "none yet"}</div>`;
+    $("stockz").classList.toggle("pick", mine() && needS() && sel!==null && asg.si===null);
+
+    // bar
+    let msg;
+    if (over) msg = match.done
+      ? `<b>Match over.</b> Take a look around, then start a new one.`
+      : `<b>Game ${match.no} scored.</b> Look the table over — the match carries on
+         whenever you're ready.`;
+    else if (!mine()) msg = E ? `${who(E.p)} is thinking…` : "";
+    else if (!needF()) msg = asg.si===null
+      ? "<b>Opening share.</b> Pick one card to register."
+      : "Ready — confirm below.";
+    else if (asg.fi===null) msg = isLead()
+      ? "<b>You lead.</b> Pick the card for the <b>market</b>."
+      : sel===null
+        ? `<b>Your turn.</b> Pick the card to plant. It goes <b>${
+            Math.min(...G.comp.map(x=>x.length)) < G.openCount ? "face up" : "face down"}</b>.`
+        : "Now choose a glowing company.";
+    else if (needS() && asg.si===null) msg = "Now pick the card to <b>register</b> as your share.";
+    else msg = "Ready — confirm, or tap a chosen card to undo.";
+    $("bar").innerHTML = `<div class="msg">${msg}</div>` + (mine()
+      ? `<button class="btn" data-a="clear">Clear</button>
+         <button class="btn key" data-a="go" ${done()?"":"disabled"}>Confirm</button>`
+      : over
+      ? `<button class="btn" data-a="res">Results</button>` + (match.done ? ""
+         : `<button class="btn key" data-a="next">Next game</button>`) : "");
+
+    // hand
+    const grp=[[],[],[],[]];
+    hand.forEach((c,i)=>grp[c.logo].push([c,i]));
+    let hg="";
+    grp.forEach((g,k)=>{
+      if (!g.length) return;
+      hg += `<div class="hgrp" style="--c:${COV[k]}"><div class="lab"><i></i>${CO[k].L} ${CO[k].name}</div>
+        <div class="row">`;
+      for (const [c,i] of g){
+        const f = slot(i);
+        const tag = f ? `<span class="tag">${f==="si"?"share":asg.ci===-1?"market":"plant"}</span>` : "";
+        hg += card(c, (sel===i?"sel ":"")+(f?"used":""),
+          `data-i="${i}" aria-label="${aria(c)}${f?", chosen — tap to undo":""}" ${mine()?"":"disabled"}`,
+          "button", tag);
+      }
+      hg += `</div></div>`;
+    });
+    $("hgrid").innerHTML = hg || `<div class="lab">Hand empty.</div>`;
+
+    // players
+    let pv="";
+    for (let p=0;p<G.n;p++){
+      const now = !over && E && E.p===p;
+      const st = G.stocks[p].map(c => card(c,"",`aria-label="${aria(c)}"`)).join("");
+      const planted = G.comp.reduce((a,cc)=>a+cc.filter(x=>x.owner===p).length,0);
+      pv += `<div class="pl ${now?"now":""}">
+        <div class="pl-h"><span>${who(p)}${now && E.lead ? " · lead":""}</span>
+          <em>${match.totals[p]}${over?` <small>(${res.sc[p]>0?"+":""}${res.sc[p]})</small>`:""}</em></div>
+        <div class="pl-m">${G.hands[p].length} in hand · ${planted} planted${
+          thinking===p?" · thinking":""}</div>
+        ${G.stocks[p].length?`<div class="row mini">${st}</div>`:""}</div>`;
+    }
+    $("players").innerHTML = pv;
+    $("log").innerHTML = log.slice(0,45).map(x=>`<li>${x}</li>`).join("");
+
+    const ph = !E ? "" : E.round < 0 ? "Setup" : `Round ${E.round+1}`;
+    $("phase").innerHTML = over ? "<b>Game over</b>"
+      : E ? `<b>${ph}</b>${E.p===undefined?"":` · ${who(E.p)}`}` : "";
+    const mx = Math.max(...match.totals);
+    $("stand").innerHTML = `<span class="goal">race to ${TARGET}</span>` +
+      match.totals.map((t,p)=>`<span class="pip ${p===0?"me":""} ${t===mx&&t>0?"top":""}">${
+        who(p)} <b>${t}</b></span>`).join("");
+    fresh = null;
+  }
+
+  $("tdemo").innerHTML = [0,1,2,3].map(s =>
+    `<i style="--t:var(--t${s})"><b>7</b>${suit(s,"")}</i>`).join("");
+  window.__whales = () => ({ G, over, match, res });
+  open("mStart");
+})();
+</script>
+
+</body></html>
