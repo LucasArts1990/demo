@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TOWER v42</title>
+<title>TOWER v45</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans:wght@400;700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 
@@ -8,9 +8,9 @@
 .page{width:210mm;height:297mm;position:relative;page-break-after:always;overflow:hidden}
 .plabel{position:absolute;top:7mm;left:10.5mm;font-size:2.6mm;color:#8A93A3}
 .pfoot{position:absolute;bottom:7mm;left:10.5mm;font-size:2.4mm;color:#A0A8B5}
-.grid{position:absolute;top:16.5mm;left:10.5mm;width:189mm;height:264mm;display:grid;grid-template-columns:repeat(3,63mm);grid-template-rows:repeat(3,88mm)}
-.card{width:63mm;height:88mm;position:relative;overflow:hidden;outline:.2mm solid #B9C0CC;outline-offset:-.1mm}
-.slot{width:63mm;height:88mm}
+.grid{position:absolute;top:16.5mm;left:10.5mm;width:189mm;height:264mm;display:grid;grid-template-columns:repeat(3,63mm);grid-template-rows:repeat(3,63mm)}
+.card{width:63mm;height:63mm;position:relative;overflow:hidden;outline:.2mm solid #B9C0CC;outline-offset:-.1mm}
+.slot{width:63mm;height:63mm}
 .track{background:#fff;padding:1.4mm}
 .track::before{content:'';position:absolute;inset:1.4mm;border:.8mm solid #3B2A6B;border-radius:2.6mm}
 .track>*{position:relative}
@@ -25,12 +25,12 @@
 .track .tc.t5 span{color:#9A6500}
 .track .tft{font-size:2.5mm;font-weight:700;color:#6B6478;text-align:center;padding-top:1.4mm}
 .pairs{position:absolute;top:22.5mm;left:17mm;display:flex;flex-direction:column;gap:0}
-.pair{position:relative;width:176mm;height:63mm;display:flex;outline:.25mm solid #6B7487}
-.face{position:relative;width:88mm;height:63mm;overflow:hidden}
-.face>.card{position:absolute;left:12.5mm;top:-12.5mm;outline:none}
+.pair{position:relative;width:126mm;height:63mm;display:flex;outline:.25mm solid #6B7487}
+.face{position:relative;width:63mm;height:63mm;overflow:hidden}
+.face>.card{position:absolute;left:0;top:0;outline:none}
 .face.fr>.card{transform:rotate(-90deg)}
 .face.bk>.card{transform:rotate(90deg)}
-.fold{position:absolute;left:88mm;top:-2mm;bottom:-2mm;border-left:.3mm dashed #6B7487}
+.fold{position:absolute;left:63mm;top:-2mm;bottom:-2mm;border-left:.3mm dashed #6B7487}
 svg.bd{display:block;flex:none}
 .pill{display:flex;align-items:center;gap:.9mm;background:#fff;border:.45mm solid #D9A93A;border-radius:2.4mm;padding:.9mm 1.6mm;min-height:8.6mm;flex:none}
 .pill.big .st{font-size:6.2mm}
@@ -42,11 +42,13 @@ svg.bd{display:block;flex:none}
 /* 종족 카드: 아래 띠 = 건물 몸체(겹쳐도 벽이 이어짐), 위 = 이 층의 지붕(덮이면 사라짐) */
 .race{background:#fff;padding:1.4mm}
 .race::before{content:'';position:absolute;inset:1.4mm;border:.8mm solid var(--fc);border-radius:2.6mm;z-index:2;pointer-events:none}
-.race .upper{position:absolute;left:1.4mm;right:1.4mm;top:1.4mm;height:60.6mm;background:#fff;border-radius:2.6mm 2.6mm 0 0;padding:2.8mm 3mm;overflow:hidden}
+.race .upper{position:absolute;left:1.4mm;right:1.4mm;top:1.4mm;height:35.6mm;background:#fff;border-radius:2.6mm 2.6mm 0 0;padding:2.8mm 3mm;overflow:hidden}
 .race .hd{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
 .race .nm{font-weight:700;font-size:3.1mm;line-height:1.15;color:var(--fc);opacity:.85;margin-top:.2mm;text-align:right;white-space:nowrap;margin-left:auto}
 .race .flags{display:flex;gap:2.2mm}
 .race .noflag{font-size:3mm;font-weight:700;color:#6B7487;border:.4mm dashed #9AA3B2;border-radius:2mm;padding:2.4mm 3mm;background:#fff}
+.race .rscene{position:absolute;left:0;right:0;bottom:0;width:100%;height:33mm;color:var(--rc);overflow:visible}
+.race .rchar{position:absolute;left:0;right:0;bottom:0;width:100%;height:36mm;color:var(--rc)}
 .race .rart{position:absolute;left:0;right:0;bottom:0;width:100%;height:27mm;color:var(--rc);opacity:.7}
 .race .rcat{position:absolute;left:0;right:0;bottom:0;width:100%;height:27mm;color:var(--rc);overflow:visible;stroke-linecap:round}
 .race .strip{position:absolute;left:1.4mm;right:1.4mm;bottom:1.4mm;height:24.6mm;background:#FFFFFF;border-radius:0 0 2.6mm 2.6mm;border-top:.7mm solid var(--fc);padding:1.6mm 3.6mm 1.6mm 4mm;display:flex;align-items:center;justify-content:space-between;gap:1.6mm}
@@ -77,7 +79,7 @@ html[lang=en] .roof .rname{font-size:5.4mm;white-space:nowrap}
 .roof .rtx{font-size:2.8mm;font-weight:700;line-height:1.38;text-align:center;color:#2A1650}
 .roof .art{position:absolute;left:1.4mm;right:1.4mm;bottom:1.4mm;width:60.2mm;height:30mm;color:#5B21B6}
 .roof .rlist{display:flex;gap:.8mm;justify-content:center;flex-wrap:wrap;max-width:58mm}
-.roof .rb2{display:flex;flex-direction:column;align-items:center;gap:.6mm;line-height:1.2}.roof .rbonus{font-size:3.6mm;font-weight:800;color:#3B0E7A}.roof .rbonus b{color:#A86B00;font-size:4.6mm}.roof .rbonus .sm{font-size:2.8mm;color:#6B5A8E;font-weight:700}
+.roof .rb2{display:flex;flex-direction:row;align-items:baseline;justify-content:center;gap:4.5mm;line-height:1.2;white-space:nowrap}.roof .rbonus{font-size:3.6mm;font-weight:800;color:#3B0E7A}.roof .rbonus b{color:#A86B00;font-size:4.6mm}.roof .rbonus .sm{font-size:2.8mm;color:#6B5A8E;font-weight:700}
 .rstk{display:flex;flex-direction:column;align-items:center;flex:none}.rstk>.mslot.under{opacity:.9}.rstk>.mslot.under .card{filter:saturate(.75)}.rstk>.mslot.over{position:relative;z-index:1}.rstk>.mslot.over .card{box-shadow:0 -2px 8px rgba(40,20,80,.35)}
 .roof.blank .wl{width:48mm;height:5mm;border-bottom:.3mm dashed #A78BFA}
 .rfx{display:flex;flex-direction:column;align-items:center;gap:1.6mm;border:.5mm solid #D9A93A;border-radius:3mm;padding:2.2mm 3mm 2mm;background:#fff}
@@ -211,7 +213,7 @@ header h1{margin:0;font-family:'Cinzel',serif;font-weight:900;font-size:26px;col
 .stack .fl .card{border-radius:3mm}
 .stag{position:absolute;left:65mm;background:var(--gold);color:#fff;font-weight:900;font-size:5.4mm;line-height:1;padding:1.2mm 2mm;border-radius:2mm;white-space:nowrap}
 .stag.zero{background:#B9B2A6}
-.newghost{width:63mm;height:88mm;border:1mm dashed #22C55E;border-radius:4mm;display:flex;align-items:center;justify-content:center;font-size:20mm;color:#22C55E;font-weight:300}
+.newghost{width:63mm;height:63mm;border:1mm dashed #22C55E;border-radius:4mm;display:flex;align-items:center;justify-content:center;font-size:20mm;color:#22C55E;font-weight:300}
 .empty{color:var(--muted);font-size:14px;padding:16px 4px}
 .opps{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:12px}
 .stash{margin-top:10px;display:flex;align-items:center;gap:10px}
@@ -274,7 +276,7 @@ details.log summary{cursor:pointer;font-weight:700;color:var(--muted)}
 body.mode-compact .card{height:44mm}
 body.mode-compact .race .upper{height:16.6mm;display:flex;flex-direction:column;justify-content:flex-end;padding:1.6mm 3mm 1.4mm}
 body.mode-compact .race .hd{align-items:flex-end}
-body.mode-compact .race .rart,body.mode-compact .race .rcat{display:none}
+body.mode-compact .race .rart,body.mode-compact .race .rcat,body.mode-compact .race .rchar,body.mode-compact .race .rscene{display:none}
 body.mode-compact .race .noflag{padding:1.4mm 2.4mm}
 body.mode-compact .roof .rtx,body.mode-compact .roof .art{display:none}
 body.mode-compact .roof .rtop{padding-top:2.6mm;gap:1.6mm}
@@ -1678,10 +1680,191 @@ function setIcons(html, races) { const k = '<div class="ricons">', i = html.inde
   return html.slice(0, i) + k + inner + svgs[svgs.length - 1] + '</div>' + html.slice(e); }
 function addBase(html, b) { if (!b) return html; const k = '<div class="fs">', i = html.indexOf(k); if (i < 0) return html;
   return html.slice(0, i + k.length) + `<span class="st" style="font-size:.8em">★${b}</span><span class="op">+</span>` + html.slice(i + k.length); }
-const cardArt = c => { let h = ART[LANG].cards[c.name] || '<div class="card race"></div>'; h = setFlags(h, c.flags); h = setIcons(h, c.races); return addBase(h, c.base); };
+// TOWER 직업 캐릭터 라인아트 (원작 캐릭터를 옮기지 않은 오리지널 디자인)
+// viewBox 0 0 100 90, 바닥선 y=86. stroke = currentColor, 면은 흰색으로 채워 겹침 표현.
+const EYE = (x, y, r = 4.6, px = 1.3) =>
+  `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff"/><circle cx="${x + px}" cy="${y + 0.4}" r="${r * 0.46}" fill="currentColor" stroke="none"/>`;
+
+const CHARS = {
+  // 0 클레릭: 오소리 수도사 — 두건 로브, 등불
+  0: `
+  <path d="M30 86C28 70 32 56 50 54C68 56 72 70 70 86Z" fill="#fff"/>
+  <path d="M50 58V84M42 64C46 66 54 66 58 64"/>
+  <path d="M28 58C26 38 36 26 50 26C64 26 74 38 72 58C66 52 60 50 50 50C40 50 34 52 28 58Z" fill="#fff"/>
+  <path d="M36 52C36 40 42 34 50 34C58 34 64 40 64 52C60 56 40 56 36 52Z" fill="#fff"/>
+  <path d="M46 35L47 50M54 35L53 50" stroke-width="3.2"/>
+  ${EYE(43, 45, 3.6)}${EYE(57, 45, 3.6)}
+  <path d="M48 52Q50 54 52 52" />
+  <path d="M74 86V60M74 60C70 60 70 52 74 50C78 52 78 60 74 60Z" fill="#fff"/>
+  <path d="M74 50V46M71 46H77"/>
+  <path d="M66 70C70 68 72 66 74 64"/>`,
+
+  // 1 위자드: 부엉이 — 뾰족 모자, 둥근 안경 눈, 책
+  1: `
+  <path d="M30 86C26 66 32 50 50 48C68 50 74 66 70 86Z" fill="#fff"/>
+  <path d="M38 64C42 72 58 72 62 64M40 74C44 80 56 80 60 74"/>
+  <path d="M28 46C30 34 40 28 50 28C60 28 70 34 72 46C70 54 62 58 50 58C38 58 30 54 28 46Z" fill="#fff"/>
+  <path d="M30 34L50 4L70 34C62 37 38 37 30 34Z" fill="#fff"/>
+  <path d="M33 30C42 33 58 33 67 30"/>
+  <path d="M58 14l2 2m0-2l-2 2" />
+  ${EYE(41, 44, 6.2, 0.8)}${EYE(59, 44, 6.2, -0.8)}
+  <path d="M47.5 44H52.5"/>
+  <path d="M48 50L50 54L52 50Z" fill="#fff"/>
+  <path d="M36 70L50 74L64 70L64 80L50 84L36 80Z" fill="#fff"/>
+  <path d="M50 74V84M40 74L46 75.5M54 75.5L60 74"/>`,
+
+  // 2 드루이드: 사슴 — 뿔, 잎사귀 지팡이, 망토
+  2: `
+  <path d="M32 86C30 70 34 58 50 56C66 58 70 70 68 86Z" fill="#fff"/>
+  <path d="M40 62L50 72L60 62"/>
+  <path d="M36 36C34 26 30 22 24 20M30 25L26 30M34 28C36 22 34 16 30 12M32 18L37 15"/>
+  <path d="M64 36C66 26 70 22 76 20M70 25L74 30M66 28C64 22 66 16 70 12M68 18L63 15"/>
+  <path d="M34 42C30 40 28 36 30 34C34 34 37 36 38 38" fill="#fff"/>
+  <path d="M66 42C70 40 72 36 70 34C66 34 63 36 62 38" fill="#fff"/>
+  <path d="M38 40C38 32 44 28 50 28C56 28 62 32 62 40C62 50 56 58 50 58C44 58 38 50 38 40Z" fill="#fff"/>
+  ${EYE(44, 41, 3.6)}${EYE(56, 41, 3.6)}
+  <path d="M47 52C48 54 52 54 53 52"/><path d="M49 49h2"/>
+  <path d="M78 86V44"/>
+  <path d="M78 44C72 40 72 32 78 28C84 32 84 40 78 44Z" fill="#fff"/><path d="M78 30V42"/>
+  <path d="M78 54C83 52 86 48 86 44C82 44 79 48 78 54Z" fill="#fff"/>
+  <path d="M66 68C70 66 74 64 78 62"/>`,
+
+  // 3 아처: 산토끼 — 긴 귀, 화살통, 활
+  3: `
+  <path d="M34 86C32 72 36 60 50 58C64 60 68 72 66 86Z" fill="#fff"/>
+  <path d="M38 66L60 62M58 58L64 80" />
+  <path d="M60 52L66 50L72 78L66 80Z" fill="#fff"/><path d="M66 50L64 42M69 50L69 42M64 42l-2 -3m2 3l2 -3M69 42l-2-3m2 3l2-3"/>
+  <path d="M42 34C38 22 38 8 42 4C46 8 47 22 46 32" fill="#fff"/>
+  <path d="M58 34C62 22 64 10 60 6C55 10 54 22 54 32" fill="#fff"/>
+  <path d="M43 28C42 20 42 12 42 9M57 28C59 20 60 13 60 10"/>
+  <path d="M36 44C36 34 42 30 50 30C58 30 64 34 64 44C64 54 58 60 50 60C42 60 36 54 36 44Z" fill="#fff"/>
+  ${EYE(43, 44, 4.2)}${EYE(57, 44, 4.2)}
+  <path d="M48 52L50 54L52 52M50 54V56"/>
+  <path d="M38 52l-6 1M38 55l-6 3M62 52l6 1M62 55l6 3"/>
+  <path d="M24 46C16 56 16 74 24 84" stroke-width="2.6"/><path d="M24 46L24 84" stroke-width="1"/>
+  <path d="M24 64H38" /><path d="M24 64l4-2m-4 2l4 2"/>`,
+
+  // 4 나이트: 고양이 — 냄비 투구, 깃발 창, 방패
+  4: `
+  <path d="M32 86C30 70 34 58 50 56C66 58 70 70 68 86Z" fill="#fff"/>
+  <path d="M38 64H62M38 70H62" />
+  <path d="M34 34L36 22L44 30Z" fill="#fff"/><path d="M66 34L64 22L56 30Z" fill="#fff"/>
+  <path d="M34 44C34 34 42 30 50 30C58 30 66 34 66 44C66 54 58 60 50 60C42 60 34 54 34 44Z" fill="#fff"/>
+  <path d="M30 36C32 26 40 20 50 20C60 20 68 26 70 36C64 34 36 34 30 36Z" fill="#fff"/>
+  <path d="M26 37C40 33 60 33 74 37" stroke-width="2.6"/>
+  ${EYE(43, 45, 4.8, 0.8)}${EYE(57, 45, 4.8, -0.8)}
+  <path d="M48 52L50 54L52 52"/><path d="M34 50l-7-1M34 53l-7 2M66 50l7-1M66 53l7 2"/>
+  <path d="M78 86V8"/><path d="M78 8L94 12L86 15L94 18L78 20" fill="#fff"/>
+  <path d="M22 62C22 58 30 56 34 58V72C34 78 28 82 22 76Z" fill="#fff"/><path d="M28 60V78"/>`,
+
+  // 5 드래곤: 통통한 꼬마 용 — 날개, 뿔, 동전 더미
+  5: `
+  <path d="M24 86H76" />
+  <path d="M30 86C30 82 34 80 38 80C42 80 46 82 46 86M54 86C54 82 58 80 62 80C66 80 70 82 70 86" fill="#fff"/>
+  <path d="M34 80C34 76 38 74 42 74C46 74 50 76 50 80" fill="#fff"/>
+  <path d="M66 70C78 70 84 62 82 54C78 60 72 62 66 60" fill="#fff"/>
+  <path d="M36 52C22 44 18 30 22 22C28 30 34 34 40 40" fill="#fff"/>
+  <path d="M64 52C78 44 82 30 78 22C72 30 66 34 60 40" fill="#fff"/>
+  <path d="M36 80C32 66 36 52 50 50C64 52 68 66 64 80Z" fill="#fff"/>
+  <path d="M44 60C46 66 54 66 56 60M43 68C46 74 54 74 57 68"/>
+  <path d="M40 22L42 12L46 20M60 22L58 12L54 20" fill="#fff"/>
+  <path d="M34 36C34 26 42 20 50 20C58 20 66 26 66 36C66 46 58 52 50 52C42 52 34 46 34 36Z" fill="#fff"/>
+  ${EYE(43, 35, 4.6)}${EYE(57, 35, 4.6)}
+  <path d="M46 45C48 47 52 47 54 45"/><path d="M46 42h.01M54 42h.01"/>`,
+
+  // 6 어새신: 여우 — 두건, 마스크, 단검
+  6: `
+  <path d="M30 86C28 70 32 58 50 56C68 58 72 70 70 86Z" fill="#fff"/>
+  <path d="M30 86C30 76 26 70 22 66M70 86C70 76 74 70 78 66"/>
+  <path d="M28 52C24 34 34 20 50 20C66 20 76 34 72 52C66 48 34 48 28 52Z" fill="#fff"/>
+  <path d="M38 50L34 34L44 40Z" fill="#fff"/><path d="M62 50L66 34L56 40Z" fill="#fff"/>
+  <path d="M36 46C38 40 44 38 50 38C56 38 62 40 64 46L50 62Z" fill="#fff"/>
+  <path d="M37 46H63" stroke-width="5" stroke-linecap="butt"/>
+  <circle cx="44" cy="46" r="2.2" fill="#fff" stroke="none"/><circle cx="56" cy="46" r="2.2" fill="#fff" stroke="none"/>
+  <path d="M48 58L50 61L52 58"/>
+  <path d="M74 60L84 46"/><path d="M84 46L88 38L86 48Z" fill="#fff"/><path d="M71 58l6 4"/>
+  <path d="M22 66C16 72 16 80 22 84C24 78 26 74 30 72" fill="#fff"/>`,
+};
+
+const EXTRA = {0: `<path d="M36 74l3-4M40 78l3-4M60 74l3-4M33 80l3-4" stroke-width="1.3"/><path d="M14 86h6M84 86h4M22 83h3" stroke-width="1.4"/><path d="M47 34C49 40 49 46 50 50C51 46 51 40 53 34Z" fill="currentColor"/>`, 1: `<path d="M34 78l3-3M64 60l3-3M62 66l3-3" stroke-width="1.3"/><path d="M16 86h6M80 86h6M26 83h3" stroke-width="1.4"/><path d="M40 18l2-2M44 12l2-2" stroke-width="1.3"/>`, 2: `<path d="M36 76l3-4M60 76l3-4M40 82l3-4" stroke-width="1.3"/><path d="M14 86h8M88 86h4M20 83h3" stroke-width="1.4"/>`, 3: `<path d="M40 76l3-4M58 74l3-4M44 82l3-4" stroke-width="1.3"/><path d="M14 86h4M80 86h8M74 83h3" stroke-width="1.4"/>`, 4: `<path d="M40 78l3-3M56 78l3-3M48 82l3-3" stroke-width="1.3"/><path d="M12 86h6M86 86h6M90 83h3" stroke-width="1.4"/><path d="M38 27l2-3M46 24l2-3" stroke-width="1.3"/>`, 5: `<path d="M40 60l2-2M60 58l2-2" stroke-width="1.3"/><path d="M14 86h6M84 86h4" stroke-width="1.4"/><path d="M38 79h.01M58 79h.01M46 73h.01" stroke-width="2.4"/>`, 6: `<path d="M38 76l3-4M58 76l3-4M44 82l3-4" stroke-width="1.3"/><path d="M12 86h4M86 86h8M90 83h3" stroke-width="1.4"/>`};
+const TILT = {0: -6, 1: 7, 2: -5, 3: 6, 4: -7, 5: 5, 6: 8};
+function charSvg(r, cls = 'rchar') {
+  return `<svg class="${cls}" viewBox="0 0 100 90" preserveAspectRatio="xMidYMax meet"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><g transform="rotate(${TILT[r]} 50 86)">${CHARS[r]}${EXTRA[r]}</g></g></svg>`;
+}
+
+
+// TOWER 직업별 탑 꼭대기 (viewBox 0 0 120 52, 바닥 y=52에서 몸통 벽 x=5/115로 이어짐)
+// back → 캐릭터 → front 순서로 그려서, 난간·성가퀴·창틀이 캐릭터 앞을 가려요.
+const W = 'M5 52V'; // 몸통 벽 시작
+const SCENES = {
+  // 0 클레릭: 왼쪽 예배당 박공지붕 + 오른쪽 아치 난간 테라스, 오소리가 테라스에
+  0: { back: `<path d="${W}34M115 52V34M5 34H115"/>
+        <g transform="translate(58 0)"><path d="M5 34V18L31 4L57 18V34Z" fill="#fff"/><path d="M31 4V-4M27.5 -1H34.5"/>
+        <path d="M25 34V25a6 6 0 0 1 12 0V34"/><path d="M14 22h.01M48 22h.01"/></g>`,
+       cx: 31, cy: 34, k: 0.36,
+       front: `<g transform="translate(-57 0)"><path d="M62 34V29H115V34" fill="#fff"/>
+        <path d="M70 34V31M80 34V31M90 34V31M100 34V31M108 34V31" stroke-width="1.2"/></g>` },
+  // 1 위자드: 왼쪽 뾰족 첨탑(별 장식) + 오른쪽 둥근 발코니, 부엉이가 발코니에
+  1: { back: `<path d="${W}36M115 52V36M5 36H115"/>
+        <g transform="translate(56 0)"><path d="M10 36L32 -6L54 36Z" fill="#fff"/><path d="M32 -6V-12M29 -9H35M30 -11l4 4M34 -11l-4 4" stroke-width="1.2"/>
+        <path d="M20 22H44M24 12H40" stroke-width="1.2"/><path d="M28 36V30a4 4 0 0 1 8 0V36"/></g>`,
+       cx: 31, cy: 36, k: 0.36,
+       front: `<g transform="translate(-57 0)"><path d="M62 36V32C62 30 66 29 70 29H108C112 29 115 30 115 32V36Z" fill="#fff"/>
+        <path d="M72 29V36M82 29V36M92 29V36M102 29V36" stroke-width="1.2"/><path d="M62 41C70 44 106 44 115 41" stroke-width="1.3"/></g>` },
+  // 2 드루이드: 성가퀴 위 정원, 왼쪽에 큰 나무, 오른쪽 덤불 화단 뒤에 사슴
+  2: { back: `<path d="${W}34M115 52V34M5 34H115"/>
+        <g transform="translate(62 0)"><path d="M28 34V18M28 24L20 18M28 20L36 14"/>
+        <path d="M10 18C6 12 10 4 18 5C20 -2 32 -3 35 3C43 1 48 9 44 15C47 21 40 26 34 23C30 27 20 27 16 23C10 25 6 21 10 18Z" fill="#fff"/>
+        <path d="M18 12q3 -2 5 0M30 9q3 -2 5 0M36 17q3 -2 5 0" stroke-width="1.2"/></g>`,
+       cx: 31, cy: 34, k: 0.36,
+       front: `<g transform="translate(-55 0)"><path d="M60 34C60 31 64 29 68 31C70 28 76 28 78 30C81 28 87 28 89 31C92 28 100 28 102 31C106 29 115 30 115 33V34Z" fill="#fff"/>
+        <path d="M70 32.5q2 -1.5 4 0M94 32.5q2 -1.5 4 0" stroke-width="1.1"/></g>` },
+  // 3 아처: 성가퀴(머롱) 사이 총안에 산토끼
+  3: { back: `<path d="${W}34M115 52V34M5 34H115"/>
+        <path d="M108 22V4M108 4L118 7L108 10" stroke-width="1.4"/>`,
+       cx: 58, cy: 34, k: 0.36,
+       front: `<path d="M5 34V25H19V34M31 34V25H43V34M73 34V25H85V34M97 34V25H115V34" fill="#fff"/>
+        <path d="M5 34H115"/><path d="M10 29.5h3M104 29.5h3M36 29.5h2M78 29.5h2" stroke-width="1.2"/>` },
+  // 4 나이트: 오른쪽 사각 망루(뾰족 지붕) + 왼쪽 낮은 성가퀴 뒤에 고양이 기사
+  4: { back: `<path d="${W}34M115 52V34M5 34H115"/>
+        <path d="M80 34V16H112V34" fill="#fff"/><path d="M77 16L96 0L115 16Z" fill="#fff"/>
+        <path d="M92 34V26a4 4 0 0 1 8 0V34"/><path d="M86 22h3M103 22h3" stroke-width="1.2"/>`,
+       cx: 40, cy: 34, k: 0.36,
+       front: `<path d="M5 34V29H15V31H23V29H33V31H41V29H51V31H59V29H69V34" fill="#fff"/>` },
+  // 5 드래곤: 허물어진 탑 꼭대기 둥지, 동전 더미 위에 꼬마 용
+  5: { back: `<path d="${W}38M115 52V38"/>
+        <path d="M5 38L11 32L16 36L22 30L27 38H93L98 31L104 36L109 30L115 38"/>`,
+       cx: 60, cy: 38, k: 0.5,
+       front: `<path d="M24 38C24 34 30 32 34 34C38 31 44 32 46 36M74 36C76 32 82 31 86 34C90 32 96 34 96 38" fill="#fff"/>
+        <path d="M30 37h.01M40 36h.01M80 36h.01M90 37h.01" stroke-width="2.4"/>` },
+  // 6 어새신: 가파른 첨탑 지붕, 지붕창(도머) 안에서 여우가 내다봄
+  6: { back: `<path d="${W}40M115 52V40M5 40H115"/>
+        <path d="M5 40L60 -10L115 40Z" fill="#fff"/><path d="M60 -10V-16"/>
+        <path d="M28 30L33 26M86 30L91 34M42 12l3 -3M76 12l3 3" stroke-width="1.2"/>
+        <path d="M42 35V18L60 4L78 18V35Z" fill="#fff"/><rect x="47" y="16" width="26" height="19" fill="#fff"/>`,
+       cx: 60, cy: 43, k: 0.36, clip: { x: 47, y: 16, w: 26, h: 19 },
+       front: `<path d="M47 35V16H73V35"/><path d="M44 36H76"/>` },
+};
+
+function sceneSvg(r) {
+  const S = SCENES[r];
+  const k = S.k, sw = (1.1 / k).toFixed(2);
+  const body = (CHARS[r] + EXTRA[r]).replace(/<path d="M\d+ 8[36]h[^"]*"[^>]*\/>/g, '');
+  const ch = `<g stroke-width="${sw}" transform="translate(${S.cx} ${S.cy}) scale(${k}) translate(-50 -86)"><g transform="rotate(${TILT[r] * 0.5} 50 86)">${body}</g></g>`;
+  const id = 'clp' + r;
+  const clip = S.clip ? `<defs><clipPath id="${id}"><rect x="${S.clip.x}" y="${S.clip.y}" width="${S.clip.w}" height="${S.clip.h}"/></clipPath></defs>` : '';
+  return `<svg class="rscene" viewBox="0 -26 120 66" preserveAspectRatio="none">${clip}<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">${S.back}${S.clip ? `<g clip-path="url(#${id})">${ch}</g>` : ch}${S.front}</g></svg>`;
+}
+
+function setChar(h, r) {
+  // v45: 직업별 탑 꼭대기 장면 + 캐릭터 (예전 옥상 그림과 작은 고양이는 지움)
+  h = h.replace(/<svg class="rart"[\s\S]*?<\/svg>/, '').replace(/<svg class="rcat"[\s\S]*?<\/svg>\s*(<\/div>)/, '$1');
+  return h.replace('<div class="hd">', sceneSvg(r) + '<div class="hd">');
+}
+const cardArt = c => { let h = ART[LANG].cards[c.name] || '<div class="card race"></div>'; h = setFlags(h, c.flags); h = setChar(h, c.tech); h = setIcons(h, c.races); return addBase(h, c.base); };
 let COL_ART = null;
 function colArtSvg(i) {
-  if (!COL_ART) { COL_ART = []; Object.values(ART.en.roofs).forEach(h => { const m = h.match(/<svg class="art"[\s\S]*<\/svg>/); if (m) COL_ART.push(m[0]); }); }
+  if (!COL_ART) { COL_ART = []; Object.values(ART.en.roofs).forEach(h => { const m = h.match(/<svg class="art"[\s\S]*<\/svg>/); if (m) COL_ART.push(m[0].replace(/<g [^>]*style="color:#[0-9A-Fa-f]+"><g transform="translate[\s\S]*?<\/g><\/g>/g, '')); }); }
   return COL_ART.length ? COL_ART[i % COL_ART.length] : '';
 }
 function colRoofArt(d) {
@@ -1722,7 +1905,7 @@ let g = null, isHuman = [], styles = [], names = [], phase = 'idle', sel = null,
 let heroQueue = [], pendingHeroes = [], viewMode = store.get('view', null), showHelp = store.get('help', 'on') === 'on', sizePref = store.get('size', 'auto');
 const BOT_MS = 900;
 const STEP = 26;
-const CH = () => viewMode === 'compact' ? 44 : 88;
+const CH = () => viewMode === 'compact' ? 44 : 63;
 const narrow = () => window.innerWidth < 760;
 if (!viewMode) viewMode = narrow() ? 'compact' : 'full';
 // card scale: S / M / L or automatic by screen width
