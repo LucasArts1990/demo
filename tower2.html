@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TOWER v55.1 Online</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans:wght@400;700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 
@@ -2449,8 +2449,6 @@ function lobbyMsg(h) { const el = $('#lobbymsg'); if (el) el.innerHTML = h || ''
 
 
 // ── PeerJS 저장소: 방장 브라우저가 원본, 참가자는 복제본 ──
-const PEER_PREFIX = 'tower2-lucas-';
-const PEER_OPTS = window.__PEEROPTS || {};
 function makeStore(sendOp) {
   const M = {}, L = new Set();
   const fire = () => L.forEach(f => f());
@@ -2475,51 +2473,78 @@ function makeStore(sendOp) {
   });
   return { api: { doc: docRef, collection: p => colRef(p) }, M, apply };
 }
-const PN = { peer: null, conns: [], conn: null, st: null, role: null, code: null, retryT: null };
-function peerTeardown() { clearTimeout(PN.retryT); try { PN.peer && PN.peer.destroy(); } catch (e) {} PN.peer = null; PN.conns = []; PN.conn = null; PN.st = null; PN.role = null; }
+
+const BROKERS = window.__BROKERS || ['wss://broker.emqx.io:8084/mqtt', 'wss://broker.hivemq.com:8884/mqtt', 'wss://test.mosquitto.org:8081/mqtt'];
+const TOPIC = code => 'tower2-lucas/v1/' + code;
+const PN = { cli: null, st: null, role: null, code: null, lost: false, pend: [], retryT: null };
+function peerTeardown() { clearInterval(PN.retryT); try { PN.cli && PN.cli.end(true); } catch (e) {} PN.cli = null; PN.st = null; PN.role = null; PN.pend = []; }
 function saveHostStore() { try { localStorage.setItem('tower2-host-' + PN.code, JSON.stringify(PN.st.M)); } catch (e) {} }
-function startHostPeer(code, restore) {
+function mqConnect(url) {
   return new Promise((res, rej) => {
-    peerTeardown(); PN.role = 'host'; PN.code = code;
-    const st = makeStore(op => new Promise(r => { st.apply(op); saveHostStore(); PN.conns.forEach(c => { try { c.open && c.send({ type: 'op', op }); } catch (e) {} }); r(); }));
-    PN.st = st; if (restore) Object.assign(st.M, restore);
-    const peer = new Peer(PEER_PREFIX + code, PEER_OPTS); PN.peer = peer;
-    peer.on('open', () => res());
-    peer.on('error', e => { if (e.type === 'unavailable-id') rej({ code: 'taken' }); else if (!NET.on) rej({ code: e.type }); else hostNetWarn(); });
-    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
-    peer.on('connection', c => {
-      c.on('open', () => { PN.conns.push(c); c.send({ type: 'full', M: st.M }); });
-      c.on('data', m => { if (m && m.type === 'op') st.api.doc(m.op.path)[m.op.op === 'set' ? 'set' : m.op.op === 'update' ? 'update' : 'delete'](m.op.data); });
-      c.on('close', () => { PN.conns = PN.conns.filter(x => x !== c); });
-    });
-    NET.db = st.api;
+    let c; try { c = mqtt.connect(url, { clientId: 't2_' + NET.uid + '_' + Math.random().toString(36).slice(2, 7), reconnectPeriod: 2000, connectTimeout: 6000, clean: true, keepalive: 30 }); } catch (e) { return rej({ code: 'connect' }); }
+    const t = setTimeout(() => { try { c.end(true); } catch (e) {} rej({ code: 'connect' }); }, 6500);
+    c.once('connect', () => { clearTimeout(t); res(c); });
+    c.on('error', () => {});
   });
+}
+function peekRoom(c, code, wait) {
+  return new Promise(res => {
+    const tp = TOPIC(code) + '/full'; let done = false;
+    const fin = v => { if (done) return; done = true; c.removeListener('message', on); try { c.unsubscribe(tp); } catch (e) {} res(v); };
+    const on = (topic, buf) => { if (topic !== tp) return; const str = buf.toString(); if (!str) return fin(null); try { fin(JSON.parse(str).M || null); } catch (e) { fin(null); } };
+    c.on('message', on); c.subscribe(tp, { qos: 1 });
+    setTimeout(() => fin(null), wait || 2500);
+  });
+}
+async function anyBroker() { for (const u of BROKERS) { try { return await mqConnect(u); } catch (e) {} } throw { code: 'connect' }; }
+async function findRoom(code) {
+  for (const u of BROKERS) {
+    let c; try { c = await mqConnect(u); } catch (e) { continue; }
+    const M = await peekRoom(c, code, 3000);
+    if (M) return { c, M };
+    try { c.end(true); } catch (e) {}
+  }
+  return null;
+}
+function startHostOn(c, code, restore) {
+  PN.cli = c; PN.role = 'host'; PN.code = code;
+  const T0 = TOPIC(code);
+  const pubFull = () => { try { c.publish(T0 + '/full', JSON.stringify({ M: st.M, t: Date.now() }), { qos: 1, retain: true }); } catch (e) {} };
+  const st = makeStore(op => new Promise(r => { st.apply(op); saveHostStore(); pubFull(); r(); }));
+  PN.st = st; if (restore) Object.assign(st.M, restore);
+  NET.db = st.api;
+  c.subscribe(T0 + '/up', { qos: 1 });
+  c.on('message', (topic, buf) => {
+    if (topic !== T0 + '/up') return;
+    let op; try { op = JSON.parse(buf.toString()); } catch (e) { return; }
+    if (!op || !op.path || !String(op.path).startsWith('games/' + code)) return;
+    if (op.op === 'update' && !st.M[op.path]) return;
+    st.apply(op); saveHostStore(); pubFull();
+  });
+  c.on('offline', hostNetWarn); c.on('connect', () => { pubFull(); });
+  if (restore) pubFull();
 }
 function hostNetWarn() { if (NET.on) addLog(T('⚠️ Connection hiccup — retrying…', '⚠️ 연결이 흔들려요 — 다시 잇는 중…')); }
-function startClientPeer(code) {
-  return new Promise((res, rej) => {
-    peerTeardown(); PN.role = 'client'; PN.code = code;
-    const st = makeStore(op => new Promise(r => { if (PN.conn && PN.conn.open) PN.conn.send({ type: 'op', op }); else netDisconnected(); r(); }));
-    PN.st = st; NET.db = st.api;
-    const peer = new Peer(undefined, PEER_OPTS); PN.peer = peer;
-    let done = false;
-    const failT = setTimeout(() => { if (!done) { done = true; rej({ code: 'timeout' }); } }, 12000);
-    const connect = () => {
-      const c = peer.connect(PEER_PREFIX + code, { reliable: true }); PN.conn = c;
-      c.on('data', m => {
-        if (m.type === 'full') { Object.keys(st.M).forEach(k => delete st.M[k]); Object.assign(st.M, m.M); st.apply({ op: 'noop' }); netReconnected(); if (!done) { done = true; clearTimeout(failT); res(); } }
-        else if (m.type === 'op') st.apply(m.op);
-      });
-      c.on('close', () => { if (PN.role === 'client' && PN.conn === c) { netDisconnected(); PN.retryT = setTimeout(connect, 3000); } });
-      c.on('error', () => {});
-    };
-    peer.on('open', connect);
-    peer.on('error', e => { if (e.type === 'peer-unavailable') { if (!done) { done = true; clearTimeout(failT); rej({ code: 'noroom' }); } else { netDisconnected(); clearTimeout(PN.retryT); PN.retryT = setTimeout(connect, 3000); } } else if (!done) { done = true; clearTimeout(failT); rej({ code: e.type }); } });
-    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
+const sameData = (a, b) => b && Object.keys(a).every(k => JSON.stringify(a[k]) === JSON.stringify(b[k]));
+function startClientOn(c, code, M0) {
+  PN.cli = c; PN.role = 'client'; PN.code = code;
+  const T0 = TOPIC(code);
+  const send = op => { try { c.publish(T0 + '/up', JSON.stringify(op), { qos: 1 }); } catch (e) {} };
+  const st = makeStore(op => new Promise(r => { PN.pend.push({ op, n: 0 }); send(op); r(); }));
+  PN.st = st; NET.db = st.api; Object.assign(st.M, M0 || {});
+  const settle = () => { PN.pend = PN.pend.filter(p => !(p.op.op === 'delete' ? !st.M[p.op.path] : sameData(p.op.data, st.M[p.op.path]))); };
+  c.on('message', (topic, buf) => {
+    if (topic !== T0 + '/full') return;
+    const str = buf.toString(); if (!str) return;
+    let m; try { m = JSON.parse(str); } catch (e) { return; }
+    Object.keys(st.M).forEach(k => delete st.M[k]); Object.assign(st.M, m.M || {});
+    settle(); st.apply({ op: 'noop' }); netReconnected();
   });
+  c.subscribe(T0 + '/full', { qos: 1 });
+  c.on('offline', netDisconnected); c.on('close', netDisconnected);
+  PN.retryT = setInterval(() => { settle(); PN.pend.forEach(p => { if (++p.n % 2 === 0 && p.n < 30) send(p.op); });
+    if (NET.on && PN.pend.some(p => p.n === 5)) setMsg(`<span>⏳ ${T('The host is not answering — make sure the host still has the page open.', '방장이 응답하지 않아요 — 방장 페이지가 켜져 있는지 확인해 주세요.')}</span>`, 'war'); }, 2500);
 }
-function netDisconnected() { if (NET.on && !PN.lost) { PN.lost = true; setMsg(`<span>📡 ${T('Lost the host — reconnecting… (the host must keep the page open)', '방장과 연결이 끊겼어요 — 다시 잇는 중… (방장은 페이지를 켜 두세요)')}</span>`, 'war'); } }
-function netReconnected() { if (PN.lost) { PN.lost = false; if (NET.on && g) advanceTurn(); } }
 
 async function netBoot() {
   let id = store.get('netuid', '');
@@ -2529,7 +2554,7 @@ async function netBoot() {
 }
 function renderNetSec() {
   const el = $('#netsec'); if (!el) return;
-  if (!window.Peer) { el.innerHTML = `<div class="hint">${T('Online play needs an internet connection (PeerJS failed to load).', '온라인 대전에 필요한 연결 모듈을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.')}</div>`; return; }
+  if (!window.mqtt) { el.innerHTML = `<div class="hint">${T('Online play needs an internet connection (module failed to load).', '온라인 대전에 필요한 연결 모듈을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.')}</div>`; return; }
   const last = store.get('lastRoom', '');
   el.innerHTML = `<div><b>🌐 ${T('Online — each on their own device', '온라인 대전 — 각자 기기로')}</b></div>
     <div class="netrow"><input id="nick" maxlength="12" placeholder="${T('Your nickname', '내 닉네임')}" value="${esc(nick())}"></div>
@@ -2545,53 +2570,56 @@ function needNick() { if (nick()) return false; netMsg(`<b style="color:#C81E1E"
 
 async function hostRoom(np) {
   if (needNick()) return;
-  netMsg(T('Creating a room…', '방 만드는 중…'));
-  for (let k = 0; k < 4; k++) {
-    const code = genCode();
-    try {
-      await startHostPeer(code);
-      await gref(code).set({ host: NET.uid, np, status: 'lobby', ver: 0, t: Date.now() });
-      await gref(code).collection('players').doc(NET.uid).set({ name: nick(), t: Date.now() });
-      store.set('hostOf', code);
-      return openLobby(code);
-    } catch (e) { if (e && e.code === 'taken') continue; netMsg(`<b style="color:#C81E1E">${T('Could not create the room.', '방을 만들지 못했어요.')}</b> ${netErrTxt(e)}`); return; }
-  }
+  peerTeardown();
+  netMsg(T('Connecting to the relay…', '중계 서버에 연결하는 중…'));
+  try {
+    const c = await anyBroker();
+    netMsg(T('Creating a room…', '방 만드는 중…'));
+    let code = genCode();
+    for (let k = 0; k < 4; k++) { if (!(await peekRoom(c, code, 1500))) break; code = genCode(); }
+    startHostOn(c, code);
+    await gref(code).set({ host: NET.uid, np, status: 'lobby', ver: 0, t: Date.now() });
+    await gref(code).collection('players').doc(NET.uid).set({ name: nick(), t: Date.now() });
+    store.set('hostOf', code);
+    openLobby(code);
+  } catch (e) { netMsg(`<b style="color:#C81E1E">${T('Could not create the room.', '방을 만들지 못했어요.')}</b> ${netErrTxt(e)}`); }
 }
 async function joinRoom(code) {
   if (!/^[A-Z0-9]{4}$/.test(code)) { netMsg(T('Enter a 4-letter room code.', '4글자 방 코드를 적어 주세요.')); return; }
   if (needNick()) return;
-  netMsg(T('Joining…', '참가하는 중…'));
+  peerTeardown();
+  netMsg(T('Looking for the room…', '방을 찾는 중…'));
   try {
-    await startClientPeer(code);
-    const s = await gref(code).get();
-    if (!s.exists) { netMsg(T('No such room.', '그런 방이 없어요.')); peerTeardown(); return; }
-    const d = s.data();
+    const f = await findRoom(code);
+    if (!f) { netMsg(`<b style="color:#C81E1E">${T('No such room.', '그 코드의 방이 없어요.')}</b> ${T('Check the code.', '코드를 확인해 주세요.')}`); return; }
+    const d = f.M['games/' + code] || {};
+    if (d.status !== 'lobby' && !(d.seats || []).includes(NET.uid)) { netMsg(T('That game has already started.', '이미 시작한 게임이에요.')); try { f.c.end(true); } catch (e) {} return; }
+    if (d.host === NET.uid) { startHostOn(f.c, code, f.M); return openLobby(code); }
+    startClientOn(f.c, code, f.M);
     if (d.status === 'lobby') await gref(code).collection('players').doc(NET.uid).set({ name: nick(), t: Date.now() });
-    else if (!(d.seats || []).includes(NET.uid)) { netMsg(T('That game has already started.', '이미 시작한 게임이에요.')); peerTeardown(); return; }
     openLobby(code);
   } catch (e) { netMsg(`<b style="color:#C81E1E">${T('Could not join.', '참가하지 못했어요.')}</b> ${netErrTxt(e)}`); peerTeardown(); }
 }
 async function rejoinRoom(code) {
   if (store.get('hostOf', '') === code) {
+    netMsg(T('Reopening your room…', '내 방을 다시 여는 중…'));
     let saved = null; try { saved = JSON.parse(localStorage.getItem('tower2-host-' + code) || 'null'); } catch (e) {}
-    if (saved) {
-      netMsg(T('Reopening your room…', '내 방을 다시 여는 중…'));
-      for (let k = 0; k < 6; k++) {
-        try { await startHostPeer(code, saved); return openLobby(code); }
-        catch (e) { if (e && e.code === 'taken') { netMsg(T('Reopening… (waiting for the old connection to expire)', '다시 여는 중… (이전 연결이 정리되길 기다려요)')); await new Promise(r => setTimeout(r, 5000)); continue; } break; }
-      }
-      netMsg(T('Could not reopen the room.', '방을 다시 열지 못했어요.')); return;
-    }
+    peerTeardown();
+    const f = await findRoom(code);
+    if (f) { startHostOn(f.c, code, f.M); return openLobby(code); }
+    if (saved) { try { const c = await anyBroker(); startHostOn(c, code, saved); return openLobby(code); } catch (e) {} }
+    netMsg(T('Could not reopen the room.', '방을 다시 열지 못했어요.')); return;
   }
   joinRoom(code);
 }
 function netErrTxt(e) {
   const c = e && e.code;
-  if (c === 'noroom') return T('No open room with that code (the host must keep the page open).', '그 코드로 열린 방이 없어요. (방장이 페이지를 켜 두고 있어야 해요)');
-  if (c === 'timeout') return T('Connection timed out — this network may block direct connections.', '연결 시간이 초과됐어요 — 이 네트워크가 직접 연결을 막고 있을 수 있어요.');
-  if (c === 'browser-incompatible') return T('This browser cannot connect.', '이 브라우저는 연결을 지원하지 않아요.');
+  if (c === 'connect') return T('Could not reach the relay server — check the internet (try mobile data if on office Wi-Fi).', '중계 서버에 닿지 않아요 — 인터넷을 확인해 주세요. (회사·학교 와이파이라면 휴대폰 데이터로 바꿔 보세요)');
   return T('Check the connection and try again.', '연결을 확인하고 다시 시도해 주세요.');
 }
+function netDisconnected() { if (NET.on && !PN.lost) { PN.lost = true; setMsg(`<span>📡 ${T('Connection lost — reconnecting…', '연결이 끊겼어요 — 다시 잇는 중…')}</span>`, 'war'); } }
+function netReconnected() { if (PN.lost) { PN.lost = false; if (NET.on && g) advanceTurn(); } }
+
 function openLobby(code) {
   NET.code = code; store.set('lastRoom', code);
   $('#start').hidden = true; $('#lobby').hidden = false;
@@ -2708,6 +2736,6 @@ showFinal = function () {
   if (NET.on && $('#againbtn')) $('#againbtn').onclick = () => { leaveLobby(); };
 };
 setTimeout(netBoot, 0);
-window.addEventListener('beforeunload', () => { try { PN.peer && PN.peer.destroy(); } catch (e) {} });
+
 
 </script></body></html>
