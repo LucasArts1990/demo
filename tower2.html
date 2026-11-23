@@ -1,5 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TOWER v55.1</title>
+<title>TOWER v55.1 Online</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans:wght@400;700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 
@@ -152,6 +153,14 @@ html[lang=en] .aid .ahd{padding-bottom:.8mm}
 .bt{font-weight:900;font-size:7mm;letter-spacing:.06em;white-space:nowrap}
 html[lang=en] .bt{font-size:6.6mm;letter-spacing:.02em}
 .bt{text-align:center;line-height:1.15}
+#lobby{position:fixed;inset:0;background:rgba(35,28,51,.55);display:flex;align-items:center;justify-content:center;z-index:101}
+#lobby[hidden]{display:none}
+#lobby .box{background:#fff;border-radius:18px;padding:26px 30px;max-width:420px;width:calc(100% - 32px);text-align:center;display:flex;flex-direction:column;gap:12px}
+#lobby .rcode{font-family:'Cinzel',serif;font-weight:900;font-size:44px;letter-spacing:.18em;color:#2A1269}
+#lobby ol.lob{text-align:left;margin:0 auto;padding-left:1.4em;line-height:1.9;min-width:220px}
+.netrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.netrow input{font:inherit;font-size:16px;padding:8px 12px;border:1px solid #CFC6E6;border-radius:10px;min-width:0;width:12em}
+#netsec{display:flex;flex-direction:column;gap:10px}
 </style><style>
 :root{--bg:#F4EEE3;--panel:#FFFFFF;--ink:#231C33;--muted:#6B6478;--line:#E2D9C8;--ally:#2457C5;--horde:#C8331E;--gold:#A86B00;--roof:#5B21B6;--p0:#2457C5;--p1:#C2410C;--p2:#15803D;--p3:#7C3AED}
 *{box-sizing:border-box}
@@ -387,7 +396,8 @@ body.ko{font-family:'Noto Sans KR','Noto Sans',system-ui,sans-serif}
 <div class="opt"><span class="olbl"><span class="t-en">CPU pace</span><span class="t-ko">상대 속도</span></span><span class="seg"><button class="btn ghost" data-pace="fast"><span class="t-en">Fast</span><span class="t-ko">빠르게</span></button><button class="btn ghost" data-pace="match"><span class="t-en">Match my pace</span><span class="t-ko">내 속도에 맞춤</span></button></span></div>
 <div class="sep"></div>
 <div><b><span class="t-en">How many players?</span><span class="t-ko">몇 명이서 할까요?</span></b> <span class="hint"><span class="t-en">(starts the game)</span><span class="t-ko">(누르면 시작)</span></span></div><div class="np"><button class="btn" data-np="2">2</button><button class="btn" data-np="3">3</button><button class="btn" data-np="4">4</button><button class="btn" data-np="5">5</button></div>
-<div class="hint"><span class="t-en">You play against CPU rivals.</span><span class="t-ko">CPU 상대들과 대결해요.</span></div><span class="np"><button class="btn ghost" data-rules>📖 <span class="t-en">How to play</span><span class="t-ko">게임 방법</span></button><button class="btn ghost" data-cards>🃏 <span class="t-en">Card list</span><span class="t-ko">카드 목록</span></button></span></div></div>
+<div class="hint"><span class="t-en">You play against CPU rivals.</span><span class="t-ko">CPU 상대들과 대결해요.</span></div><div class="sep"></div><div id="netsec"></div><span class="np"><button class="btn ghost" data-rules>📖 <span class="t-en">How to play</span><span class="t-ko">게임 방법</span></button><button class="btn ghost" data-cards>🃏 <span class="t-en">Card list</span><span class="t-ko">카드 목록</span></button></span></div></div>
+<div id="lobby" hidden><div class="box" id="lobbybox"></div></div>
 <div class="wrap">
 <header><h1>TOWER</h1><div id="rounds"></div><span class="hint hide-s"><span class="t-en">⚔ = influence war</span><span class="t-ko">⚔ = 영향력 전쟁</span></span><span class="grow"></span><span class="hint" id="deckcnt"></span>
 <button class="btn ghost tog" id="helpbtn" title="Card help">💬</button><button class="btn ghost tog" id="sizebtn">🔍</button><button class="btn ghost" data-cards>🃏<span class="hide-s"> <span class="t-en">Cards</span><span class="t-ko">카드 목록</span></span></button><button class="btn ghost" data-rules>📖<span class="hide-s"> <span class="t-en">Rules</span><span class="t-ko">룰북</span></span></button><button class="btn ghost" id="newgame"><span class="t-en">New game</span><span class="t-ko">새 게임</span></button></header>
@@ -1918,6 +1928,7 @@ CARDS54.forEach(c => {
 CARDS54.forEach(c => { if (c.tech === 1) { c.flags = [0, 1]; if (c.races.length === 1) c.races = [1, 1]; } if (c.tech === 4) { c.base = 0; c.zb = 1; } });
 const CARD_BY = {}; CARDS54.forEach(c => { CARD_BY[c.name] = c; });
 
+var ME = 0;
 let g = null, isHuman = [], styles = [], names = [], phase = 'idle', sel = null, selRoof = null, botPending = null, logPtr = 0, timer = null;
 let heroQueue = [], pendingHeroes = [], viewMode = store.get('view', null), showHelp = store.get('help', 'on') === 'on', sizePref = store.get('size', 'auto');
 const BOT_MS = 900;
@@ -2143,10 +2154,10 @@ function renderMarkets() {
 
 let openOpp = {};
 function renderBoards() {
-  const cp = curPid(g), me = g.players[0];
+  const cp = curPid(g), me = g.players[ME];
   let res = '';
   if (me.reserve.length) {
-    const can = !g.over && isHuman[cp] && cp === 0 && phase === 'pick-card';
+    const can = !g.over && isHuman[cp] && cp === ME && phase === 'pick-card';
     const moves = can ? getLegalCardMoves(g, me).filter(m => m.src === 'r') : [];
     res = `<div class="stash"><div class="lbl">📦 ${ROOF_BY.store.name}</div><div class="row">` + me.reserve.map((c, i) => {
       const ok = can && moves.some(m => m.i === i);
@@ -2154,10 +2165,10 @@ function renderBoards() {
       return `<div class="mslot ${ok ? 'selectable' : ''} ${picked ? 'picked' : ''}" data-ri="${i}" data-prev="c:${c.name}"><div class="zw" style="zoom:${Z(0.55)}">${cardArt(c)}</div></div>`;
     }).join('') + `</div></div>`;
   }
-  $('#me').innerHTML = `<div class="pbox ${cp === 0 && !g.over ? 'turn' : ''}">${playerHead(0)}${cityHTML(0, Z(0.72))}${res}</div>`;
+  $('#me').innerHTML = `<div class="pbox ${cp === ME && !g.over ? 'turn' : ''}">${playerHead(ME)}${cityHTML(ME, Z(0.72))}${res}</div>`;
   // opponents: collapsible on small screens (always open at game end)
   const collapse = narrow() && !g.over;
-  $('#opps').innerHTML = g.players.map((_, i) => i).filter(i => i > 0).map(i => {
+  $('#opps').innerHTML = g.players.map((_, i) => i).filter(i => i !== ME).map(i => {
     const open = !collapse || openOpp[i];
     const tg = collapse ? `<button class="otog" data-opp="${i}" aria-label="toggle">${open ? '▾' : '▸'}</button>` : '';
     return `<div class="pbox opp ${cp === i && !g.over ? 'turn' : ''}">${playerHead(i, tg)}${open ? cityHTML(i, Z(0.46)) : ''}</div>`;
@@ -2424,5 +2435,279 @@ $('#cardlist').onclick = e => { if (e.target.id === 'cardlist') $('#cardlist').h
 
 setLang(store.get('lang', (navigator.language || '').startsWith('ko') ? 'ko' : 'en'));
 showStart();
+
+
+// ═════════ ONLINE (각자 기기 대전) ═════════
+const NET = { db: null, user: null, uid: null, on: false, code: null, host: false, seats: [], pnames: [], ver: 0, gUnsub: null, pUnsub: null, needInit: false, wq: Promise.resolve(), warT: null, np: 0, players: [] };
+const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const genCode = () => Array.from({ length: 4 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
+const __unused = 0;
+const nick = () => (store.get('nick', '') || '').trim().slice(0, 12);
+const gref = code => NET.db.doc('games/' + code);
+function netMsg(h) { const el = $('#netmsg'); if (el) el.innerHTML = h || ''; }
+function lobbyMsg(h) { const el = $('#lobbymsg'); if (el) el.innerHTML = h || ''; }
+
+
+// ── PeerJS 저장소: 방장 브라우저가 원본, 참가자는 복제본 ──
+const PEER_PREFIX = 'tower2-lucas-';
+const PEER_OPTS = window.__PEEROPTS || {};
+function makeStore(sendOp) {
+  const M = {}, L = new Set();
+  const fire = () => L.forEach(f => f());
+  const snapDoc = path => { const d = M[path]; return { id: path.split('/').pop(), exists: !!d, data: () => d, metadata: { fromCache: false, hasPendingWrites: false } }; };
+  const apply = op => { if (op.op === 'set') M[op.path] = op.data; else if (op.op === 'update') { if (M[op.path]) M[op.path] = Object.assign({}, M[op.path], op.data); } else if (op.op === 'delete') delete M[op.path]; fire(); };
+  const docRef = path => ({
+    id: path.split('/').pop(), path,
+    get: () => Promise.resolve(snapDoc(path)),
+    set: data => sendOp({ op: 'set', path, data: JSON.parse(JSON.stringify(data)) }),
+    update: data => sendOp({ op: 'update', path, data: JSON.parse(JSON.stringify(data)) }),
+    delete: () => sendOp({ op: 'delete', path }),
+    onSnapshot(next) { let last; const f = () => { const s = JSON.stringify(M[path] || null); if (s !== last) { last = s; next(snapDoc(path)); } }; L.add(f); setTimeout(f, 0); return () => L.delete(f); },
+    collection: sub => colRef(path + '/' + sub),
+  });
+  const colRef = (path, ord) => ({
+    path, doc: id => docRef(path + '/' + id), orderBy: f => colRef(path, f),
+    onSnapshot(next) { let last; const f = () => { const n = path.split('/').length + 1;
+      const ks = Object.keys(M).filter(k => k.startsWith(path + '/') && k.split('/').length === n);
+      if (ord) ks.sort((x, y) => (M[x][ord] || 0) - (M[y][ord] || 0));
+      const s = JSON.stringify(ks.map(k => [k, M[k]])); if (s !== last) { last = s; const docs = ks.map(snapDoc); next({ docs, size: docs.length, empty: !docs.length }); } };
+      L.add(f); setTimeout(f, 0); return () => L.delete(f); },
+  });
+  return { api: { doc: docRef, collection: p => colRef(p) }, M, apply };
+}
+const PN = { peer: null, conns: [], conn: null, st: null, role: null, code: null, retryT: null };
+function peerTeardown() { clearTimeout(PN.retryT); try { PN.peer && PN.peer.destroy(); } catch (e) {} PN.peer = null; PN.conns = []; PN.conn = null; PN.st = null; PN.role = null; }
+function saveHostStore() { try { localStorage.setItem('tower2-host-' + PN.code, JSON.stringify(PN.st.M)); } catch (e) {} }
+function startHostPeer(code, restore) {
+  return new Promise((res, rej) => {
+    peerTeardown(); PN.role = 'host'; PN.code = code;
+    const st = makeStore(op => new Promise(r => { st.apply(op); saveHostStore(); PN.conns.forEach(c => { try { c.open && c.send({ type: 'op', op }); } catch (e) {} }); r(); }));
+    PN.st = st; if (restore) Object.assign(st.M, restore);
+    const peer = new Peer(PEER_PREFIX + code, PEER_OPTS); PN.peer = peer;
+    peer.on('open', () => res());
+    peer.on('error', e => { if (e.type === 'unavailable-id') rej({ code: 'taken' }); else if (!NET.on) rej({ code: e.type }); else hostNetWarn(); });
+    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
+    peer.on('connection', c => {
+      c.on('open', () => { PN.conns.push(c); c.send({ type: 'full', M: st.M }); });
+      c.on('data', m => { if (m && m.type === 'op') st.api.doc(m.op.path)[m.op.op === 'set' ? 'set' : m.op.op === 'update' ? 'update' : 'delete'](m.op.data); });
+      c.on('close', () => { PN.conns = PN.conns.filter(x => x !== c); });
+    });
+    NET.db = st.api;
+  });
+}
+function hostNetWarn() { if (NET.on) addLog(T('⚠️ Connection hiccup — retrying…', '⚠️ 연결이 흔들려요 — 다시 잇는 중…')); }
+function startClientPeer(code) {
+  return new Promise((res, rej) => {
+    peerTeardown(); PN.role = 'client'; PN.code = code;
+    const st = makeStore(op => new Promise(r => { if (PN.conn && PN.conn.open) PN.conn.send({ type: 'op', op }); else netDisconnected(); r(); }));
+    PN.st = st; NET.db = st.api;
+    const peer = new Peer(undefined, PEER_OPTS); PN.peer = peer;
+    let done = false;
+    const failT = setTimeout(() => { if (!done) { done = true; rej({ code: 'timeout' }); } }, 12000);
+    const connect = () => {
+      const c = peer.connect(PEER_PREFIX + code, { reliable: true }); PN.conn = c;
+      c.on('data', m => {
+        if (m.type === 'full') { Object.keys(st.M).forEach(k => delete st.M[k]); Object.assign(st.M, m.M); st.apply({ op: 'noop' }); netReconnected(); if (!done) { done = true; clearTimeout(failT); res(); } }
+        else if (m.type === 'op') st.apply(m.op);
+      });
+      c.on('close', () => { if (PN.role === 'client' && PN.conn === c) { netDisconnected(); PN.retryT = setTimeout(connect, 3000); } });
+      c.on('error', () => {});
+    };
+    peer.on('open', connect);
+    peer.on('error', e => { if (e.type === 'peer-unavailable') { if (!done) { done = true; clearTimeout(failT); rej({ code: 'noroom' }); } else { netDisconnected(); clearTimeout(PN.retryT); PN.retryT = setTimeout(connect, 3000); } } else if (!done) { done = true; clearTimeout(failT); rej({ code: e.type }); } });
+    peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
+  });
+}
+function netDisconnected() { if (NET.on && !PN.lost) { PN.lost = true; setMsg(`<span>📡 ${T('Lost the host — reconnecting… (the host must keep the page open)', '방장과 연결이 끊겼어요 — 다시 잇는 중… (방장은 페이지를 켜 두세요)')}</span>`, 'war'); } }
+function netReconnected() { if (PN.lost) { PN.lost = false; if (NET.on && g) advanceTurn(); } }
+
+async function netBoot() {
+  let id = store.get('netuid', '');
+  if (!id) { id = 'u' + Math.random().toString(36).slice(2, 10); store.set('netuid', id); }
+  NET.uid = id;
+  renderNetSec();
+}
+function renderNetSec() {
+  const el = $('#netsec'); if (!el) return;
+  if (!window.Peer) { el.innerHTML = `<div class="hint">${T('Online play needs an internet connection (PeerJS failed to load).', '온라인 대전에 필요한 연결 모듈을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.')}</div>`; return; }
+  const last = store.get('lastRoom', '');
+  el.innerHTML = `<div><b>🌐 ${T('Online — each on their own device', '온라인 대전 — 각자 기기로')}</b></div>
+    <div class="netrow"><input id="nick" maxlength="12" placeholder="${T('Your nickname', '내 닉네임')}" value="${esc(nick())}"></div>
+    <div class="np">${[2, 3, 4, 5].map(n => `<button class="btn" data-host="${n}">${T(`Host ${n}P`, `${n}인 방 만들기`)}</button>`).join('')}</div>
+    <div class="netrow"><input id="joincode" maxlength="4" placeholder="${T('Room code', '방 코드')}" style="text-transform:uppercase"><button class="btn" id="joinbtn">${T('Join', '참가')}</button>${last ? `<button class="btn ghost" id="rejoinbtn">${T('Rejoin', '이어하기')} ${esc(last)}</button>` : ''}</div>
+    <div class="hint" id="netmsg"></div>`;
+  $('#nick').oninput = e => store.set('nick', e.target.value.trim().slice(0, 12));
+  el.querySelectorAll('[data-host]').forEach(b => { b.onclick = () => hostRoom(+b.dataset.host); });
+  $('#joinbtn').onclick = () => joinRoom(($('#joincode').value || '').toUpperCase().trim());
+  if ($('#rejoinbtn')) $('#rejoinbtn').onclick = () => rejoinRoom(last);
+}
+function needNick() { if (nick()) return false; netMsg(`<b style="color:#C81E1E">${T('Enter a nickname first.', '닉네임을 먼저 적어 주세요.')}</b>`); $('#nick') && $('#nick').focus(); return true; }
+
+async function hostRoom(np) {
+  if (needNick()) return;
+  netMsg(T('Creating a room…', '방 만드는 중…'));
+  for (let k = 0; k < 4; k++) {
+    const code = genCode();
+    try {
+      await startHostPeer(code);
+      await gref(code).set({ host: NET.uid, np, status: 'lobby', ver: 0, t: Date.now() });
+      await gref(code).collection('players').doc(NET.uid).set({ name: nick(), t: Date.now() });
+      store.set('hostOf', code);
+      return openLobby(code);
+    } catch (e) { if (e && e.code === 'taken') continue; netMsg(`<b style="color:#C81E1E">${T('Could not create the room.', '방을 만들지 못했어요.')}</b> ${netErrTxt(e)}`); return; }
+  }
+}
+async function joinRoom(code) {
+  if (!/^[A-Z0-9]{4}$/.test(code)) { netMsg(T('Enter a 4-letter room code.', '4글자 방 코드를 적어 주세요.')); return; }
+  if (needNick()) return;
+  netMsg(T('Joining…', '참가하는 중…'));
+  try {
+    await startClientPeer(code);
+    const s = await gref(code).get();
+    if (!s.exists) { netMsg(T('No such room.', '그런 방이 없어요.')); peerTeardown(); return; }
+    const d = s.data();
+    if (d.status === 'lobby') await gref(code).collection('players').doc(NET.uid).set({ name: nick(), t: Date.now() });
+    else if (!(d.seats || []).includes(NET.uid)) { netMsg(T('That game has already started.', '이미 시작한 게임이에요.')); peerTeardown(); return; }
+    openLobby(code);
+  } catch (e) { netMsg(`<b style="color:#C81E1E">${T('Could not join.', '참가하지 못했어요.')}</b> ${netErrTxt(e)}`); peerTeardown(); }
+}
+async function rejoinRoom(code) {
+  if (store.get('hostOf', '') === code) {
+    let saved = null; try { saved = JSON.parse(localStorage.getItem('tower2-host-' + code) || 'null'); } catch (e) {}
+    if (saved) {
+      netMsg(T('Reopening your room…', '내 방을 다시 여는 중…'));
+      for (let k = 0; k < 6; k++) {
+        try { await startHostPeer(code, saved); return openLobby(code); }
+        catch (e) { if (e && e.code === 'taken') { netMsg(T('Reopening… (waiting for the old connection to expire)', '다시 여는 중… (이전 연결이 정리되길 기다려요)')); await new Promise(r => setTimeout(r, 5000)); continue; } break; }
+      }
+      netMsg(T('Could not reopen the room.', '방을 다시 열지 못했어요.')); return;
+    }
+  }
+  joinRoom(code);
+}
+function netErrTxt(e) {
+  const c = e && e.code;
+  if (c === 'noroom') return T('No open room with that code (the host must keep the page open).', '그 코드로 열린 방이 없어요. (방장이 페이지를 켜 두고 있어야 해요)');
+  if (c === 'timeout') return T('Connection timed out — this network may block direct connections.', '연결 시간이 초과됐어요 — 이 네트워크가 직접 연결을 막고 있을 수 있어요.');
+  if (c === 'browser-incompatible') return T('This browser cannot connect.', '이 브라우저는 연결을 지원하지 않아요.');
+  return T('Check the connection and try again.', '연결을 확인하고 다시 시도해 주세요.');
+}
+function openLobby(code) {
+  NET.code = code; store.set('lastRoom', code);
+  $('#start').hidden = true; $('#lobby').hidden = false;
+  if (NET.gUnsub) NET.gUnsub(); if (NET.pUnsub) NET.pUnsub();
+  const loadT = setTimeout(() => lobbyMsg(T('Still connecting…', '아직 연결 중…')), 10000);
+  NET.gUnsub = gref(code).onSnapshot(s => { clearTimeout(loadT); if (s.exists || PN.role === 'host') onGameDoc(s); });
+  NET.pUnsub = gref(code).collection('players').orderBy('t').onSnapshot(s => { NET.players = s.docs.map(d => Object.assign({ id: d.id }, d.data())); renderLobby(); }, () => {});
+  renderLobby();
+}
+function leaveLobby() {
+  peerTeardown();
+  if (NET.gUnsub) NET.gUnsub(); if (NET.pUnsub) NET.pUnsub();
+  NET.gUnsub = NET.pUnsub = null; NET.on = false; NET.code = null; ME = 0;
+  $('#lobby').hidden = true; showStart(); renderNetSec();
+}
+function renderLobby() {
+  const box = $('#lobbybox'); if (!box || NET.on) return;
+  const np = NET.np || 0, ps = NET.players, amHost = NET.host;
+  const rows = Array.from({ length: Math.max(np, ps.length) }, (_, i) => {
+    const p = ps[i];
+    if (p) return `<li>${i < np ? '' : '<s>'}<b>${esc(p.name || '?')}</b>${p.id === NET.uid ? ` <span class="hint">(${T('you', '나')})</span>` : ''}${p.id === NET.hostUid ? ' 👑' : ''}${i < np ? '' : '</s> <span class="hint">' + T('(full — will watch)', '(정원 초과)') + '</span>'}</li>`;
+    return `<li class="hint">${T('Empty seat → CPU', '빈 자리 → CPU')}</li>`;
+  }).join('');
+  box.innerHTML = `<h2 class="sr" style="font-size:22px">${T('Room', '방 코드')}</h2>
+    <div class="rcode">${esc(NET.code)}</div>
+    <div class="hint">${T('Share this code. Everyone opens the same link and joins with it.', '이 코드를 알려 주세요. 같은 페이지를 열고 코드로 참가해요. 방장은 게임 끝까지 페이지를 켜 두세요.')}</div>
+    <div><b>${np ? np + T('-player game', '인 게임') : ''}</b></div><ol class="lob">${rows}</ol>
+    ${amHost ? `<button class="btn go" id="startnet">${T('Start (empty seats = CPU)', '시작하기 (빈 자리는 CPU)')}</button>` : `<div class="hint">${T('Waiting for the host to start…', '방장이 시작하기를 기다리는 중…')}</div>`}
+    <div class="hint" id="lobbymsg"></div>
+    <button class="btn ghost" id="leavenet">${T('Leave', '나가기')}</button>`;
+  if ($('#startnet')) $('#startnet').onclick = hostStart;
+  $('#leavenet').onclick = leaveLobby;
+}
+function onGameDoc(s) {
+  if (!s.exists) { lobbyMsg(T('The room is gone.', '방이 사라졌어요.')); return; }
+  const d = s.data();
+  NET.np = d.np; NET.hostUid = d.host; NET.host = d.host === NET.uid;
+  if (d.status === 'lobby') { renderLobby(); return; }
+  if (!d.state) return;
+  if (!NET.on) netEnterGame(d);
+  applyRemote(d);
+}
+async function hostStart() {
+  const np = NET.np, ps = NET.players.slice(0, np);
+  NET.seats = Array.from({ length: np }, (_, i) => ps[i] ? ps[i].id : 'bot');
+  let b = 0; NET.pnames = NET.seats.map((s, i) => ps[i] ? (ps[i].name || '?') : '🤖 ' + DATA[LANG].BOTS[b++ % DATA[LANG].BOTS.length]);
+  NET.on = true; NET.needInit = true; NET.ver = 0;
+  $('#lobby').hidden = true;
+  startNewGame(np);              // → advanceTurn() → 첫 상태 업로드
+}
+function setupSeats() {
+  ME = Math.max(0, NET.seats.indexOf(NET.uid));
+  isHuman = NET.seats.map(s => s === NET.uid);
+  names = NET.pnames.map((n, i) => NET.seats[i] === NET.uid ? n + T(' (you)', ' (나)') : n);
+  const r = rngOf(4242); styles = NET.seats.map(() => randomBotStyle(r));
+}
+function netEnterGame(d) {
+  NET.on = true; NET.seats = d.seats; NET.pnames = d.names; NET.ver = 0;
+  setupSeats();
+  $('#lobby').hidden = true; $('#start').hidden = true;
+  const np = d.seats.length, nR = np >= 5 ? 10 : 12, jr = JUDGE_BY_ROUNDS[nR];
+  WAR_TABLE = (np >= 5 ? WT_BASE.map((x, i) => ({ r: x.r, pay: WT_5[i] })) : WT_BASE).map((x, i) => ({ r: jr[i], pay: x.pay }));
+  document.body.classList.toggle('mode-compact', viewMode === 'compact');
+  logPtr = 0; $('#log').innerHTML = ''; $('#result').hidden = true; $('#result').innerHTML = '';
+  sel = null; selRoof = null; botPending = null; openOpp = {};
+  addLog(T(`Online room ${NET.code} · ${np} players`, `온라인 방 ${NET.code} · ${np}인`));
+}
+function netSerialize() { return JSON.stringify(g, (k, v) => typeof v === 'function' ? undefined : v); }
+function publish(first) {
+  NET.ver++;
+  const body = { ver: NET.ver, state: netSerialize(), status: g.over ? 'over' : 'play', by: NET.uid, t: Date.now() };
+  if (first) { body.seats = NET.seats; body.names = NET.pnames; }
+  const ref = gref(NET.code);
+  NET.wq = NET.wq.then(() => ref.update(body)).catch(() => netDisconnected());
+}
+function applyRemote(d) {
+  if (!(d.ver > NET.ver)) return;
+  NET.ver = d.ver;
+  const from = logPtr;
+  g = JSON.parse(d.state); g.r = rngOf((g.o.seed || 1) + d.ver * 7);
+  if (NET.seats.length !== g.players.length) { NET.seats = d.seats; NET.pnames = d.names; setupSeats(); }
+  clearTimeout(timer); clearTimeout(NET.warT); sel = null; selRoof = null; botPending = null;
+  drainLogs();
+  const j = g.log.slice(from).filter(e => e.t === 'judge').pop();
+  if (j) showWarResult(j); else advanceTurn();
+}
+
+// ── 기존 흐름에 연결 ──
+const __adv0 = advanceTurn;
+advanceTurn = function () {
+  if (!NET.on) return __adv0();
+  if (NET.needInit) { NET.needInit = false; setupSeats(); publish(true); }
+  clearTimeout(timer); hideChoice();
+  if (g.over) return showFinal();
+  const pid = curPid(g), s = NET.seats[pid];
+  if (s === NET.uid) return __adv0();
+  if (s === 'bot' && NET.host) return __adv0();
+  phase = 'remote'; renderAll();
+  setMsg(`<span>⏳ <b>${esc(names[pid])}</b> ${s === 'bot' ? T('(CPU, run by the host) is choosing…', '(CPU, 방장 기기에서 진행) 고르는 중…') : T('is choosing…', '고르는 중…')}</span>`, 'bot');
+};
+const __fin0 = finishTurnAndAdvance;
+finishTurnAndAdvance = function (pid) { const r = __fin0(pid); if (NET.on) publish(false); return r; };
+const __war0 = showWarResult;
+showWarResult = function (j) {
+  __war0(j);
+  if (!NET.on) return;
+  clearTimeout(NET.warT);
+  const btn = $('#contbtn'); if (btn) btn.insertAdjacentHTML('beforebegin', `<span class="hint">${T('auto-continues in 15s', '15초 뒤 자동 진행')}</span>`);
+  NET.warT = setTimeout(() => { if (phase === 'judge' && $('#contbtn')) $('#contbtn').click(); }, 15000);
+};
+const __final0 = showFinal;
+showFinal = function () {
+  __final0();
+  if (NET.on && $('#againbtn')) $('#againbtn').onclick = () => { leaveLobby(); };
+};
+setTimeout(netBoot, 0);
+window.addEventListener('beforeunload', () => { try { PN.peer && PN.peer.destroy(); } catch (e) {} });
 
 </script></body></html>
